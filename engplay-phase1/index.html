@@ -1,0 +1,1780 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0e1324">
+<title>EngPlay · เกมฝึกภาษาอังกฤษ 3 ระดับ</title>
+<style>
+:root{
+  --bg:#0e1324; --bg2:#151c33; --card:#1b2340; --card2:#222c4f;
+  --line:#2c3761; --txt:#eef1fb; --dim:#9aa5cc;
+  --brand:#5b8cff; --brand2:#7c5cff; --ok:#2fd27a; --bad:#ff5c7a; --warn:#ffc24b;
+  --r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;height:100%}
+body{
+  background:radial-gradient(1200px 600px at 50% -10%,#1d2850 0%,var(--bg) 55%) fixed;
+  color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Sukhumvit Set","Noto Sans Thai","Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  font-size:16px;line-height:1.5;
+  overscroll-behavior:none;
+}
+#app{max-width:520px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 10px) 14px calc(env(safe-area-inset-bottom) + 86px);}
+h1,h2,h3{margin:0;line-height:1.3}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+.hide{display:none !important}
+
+/* ---------- shared bits ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.row{display:flex;align-items:center;gap:10px}
+.sp{flex:1}
+.dim{color:var(--dim)}
+.sm{font-size:13px}
+.xs{font-size:12px}
+.big{font-size:26px;font-weight:800;letter-spacing:-.4px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--card2);border:1px solid var(--line);
+  border-radius:999px;padding:5px 11px;font-size:12.5px;color:var(--dim);white-space:nowrap}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;font-weight:700;
+  border-radius:14px;padding:15px 16px;min-height:52px;box-shadow:0 8px 20px -10px var(--brand)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--card2);border:1px solid var(--line);box-shadow:none;font-weight:600}
+.btn.sm2{min-height:44px;padding:11px 14px;font-size:14px;border-radius:12px}
+.bar{height:8px;border-radius:99px;background:#0d1328;overflow:hidden}
+.bar>i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--brand),var(--ok));transition:width .5s}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* ---------- bottom nav ---------- */
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(14,19,36,.92);
+  backdrop-filter:blur(12px);border-top:1px solid var(--line);
+  padding:6px 0 calc(env(safe-area-inset-bottom) + 6px)}
+#nav .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+#nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0;color:var(--dim);font-size:11px;font-weight:600}
+#nav button.on{color:var(--brand)}
+#nav svg{width:23px;height:23px}
+
+/* ---------- home ---------- */
+.hero{display:flex;align-items:center;gap:12px;margin:6px 2px 14px}
+.logo{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand2));
+  display:grid;place-items:center;font-weight:900;font-size:19px;color:#fff}
+.stats3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:11px 8px;text-align:center}
+.stat b{display:block;font-size:19px;letter-spacing:-.3px}
+.lv{margin-top:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px;position:relative;overflow:hidden}
+.lv.locked{opacity:.55}
+.lv .tag{position:absolute;top:0;right:0;font-size:11px;padding:4px 10px;border-bottom-left-radius:10px;
+  background:var(--card2);color:var(--dim)}
+.lv h3{font-size:16.5px}
+.units{display:flex;flex-direction:column;gap:7px;margin-top:12px}
+.unit{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);
+  border-radius:13px;padding:11px 12px;width:100%;text-align:left}
+.unit .ub{flex:1;min-width:0}
+.unit .ub div:first-child{font-weight:600;font-size:14.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ring{width:38px;height:38px;flex:none;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring span{position:absolute;inset:0;display:grid;place-items:center;font-size:10.5px;font-weight:700}
+
+/* ---------- quiz ---------- */
+#qTop{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+#qBar{flex:1;height:9px;border-radius:99px;background:#0d1328;overflow:hidden}
+#qBar>i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--ok));width:0;transition:width .3s}
+.qcard{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;text-align:center}
+.qlabel{font-size:12px;color:var(--dim);letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+.qword{font-size:30px;font-weight:800;letter-spacing:-.5px;word-break:break-word}
+.qword.th{font-size:26px}
+.qsent{font-size:19px;font-weight:600;line-height:1.6}
+.qsent u{color:var(--brand);text-decoration:none;border-bottom:2px dashed var(--brand);padding:0 14px}
+.speak{margin:12px auto 0;width:62px;height:62px;border-radius:50%;background:var(--card2);
+  border:1px solid var(--line);display:grid;place-items:center}
+.speak svg{width:28px;height:28px;fill:var(--brand)}
+.opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.opt{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);
+  border-radius:14px;padding:14px;min-height:54px;text-align:left;font-size:16px;font-weight:600;transition:.15s}
+.opt .n{width:24px;height:24px;flex:none;border-radius:7px;background:var(--card2);display:grid;place-items:center;
+  font-size:12px;color:var(--dim);font-weight:700}
+.opt.ok{border-color:var(--ok);background:rgba(47,210,122,.14)}
+.opt.bad{border-color:var(--bad);background:rgba(255,92,122,.14)}
+.opt.dis{opacity:.45}
+/* scramble */
+.slot{min-height:64px;border:1.5px dashed var(--line);border-radius:14px;padding:9px;display:flex;
+  flex-wrap:wrap;gap:7px;align-content:flex-start;margin-top:14px}
+.pool{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:15px;font-weight:600}
+.chip.used{opacity:.25}
+.chip.ok{border-color:var(--ok);background:rgba(47,210,122,.16)}
+.chip.bad{border-color:var(--bad);background:rgba(255,92,122,.16)}
+#fb{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--bg2);border-top:1px solid var(--line);
+  padding:14px 14px calc(env(safe-area-inset-bottom) + 14px);transform:translateY(110%);transition:.25s}
+#fb.show{transform:none}
+#fb .in{max-width:520px;margin:0 auto}
+#fbTitle{font-weight:800;font-size:17px;display:flex;align-items:center;gap:8px}
+#fbTitle.ok{color:var(--ok)} #fbTitle.bad{color:var(--bad)}
+
+/* ---------- result / stats ---------- */
+.mini{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:12px}
+.chart{display:flex;align-items:flex-end;gap:7px;height:110px;margin-top:14px}
+.chart>div{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;height:100%}
+.chart i{display:block;width:100%;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,var(--brand),var(--brand2));min-height:3px}
+.listrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.listrow:last-child{border-bottom:0}
+.fade{animation:fade .28s ease both}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:90;background:var(--card2);
+  border:1px solid var(--line);border-radius:12px;padding:10px 16px;font-size:14px;font-weight:600;
+  box-shadow:0 10px 30px -10px #000}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="fb"><div class="in">
+  <div id="fbTitle"></div>
+  <div id="fbBody" class="sm dim" style="margin:6px 0 12px"></div>
+  <button class="btn" id="fbNext">ถัดไป</button>
+</div></div>
+
+<nav id="nav"><div class="in">
+  <button data-go="home" class="on">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10.5 12 3l9 7.5V21H3z"/></svg>เล่น</button>
+  <button data-go="stats">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>ผลลัพธ์</button>
+  <button data-go="chat">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>โค้ช AI</button>
+  <button data-go="words">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16M4 12h16M4 19h10"/></svg>คลังคำ</button>
+</div></nav>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-config.js"></script>
+<script>
+/* =======================================================================
+   EngPlay — เกมฝึกภาษาอังกฤษ 3 ระดับ
+   ออฟไลน์ล้วน · ไม่มีเซิร์ฟเวอร์ · เนื้อหา 150 คำ/สำนวน + ระบบทบทวนอัตโนมัติ
+   ======================================================================= */
+
+/* ---------------------------- 1. คลังเนื้อหา ---------------------------- */
+var BANK = [
+{ lv:1, name:"ระดับ 1 · พื้นฐาน", sub:"คำที่ใช้ทุกวัน · ประโยคสั้น", units:[
+  { name:"ครอบครัวและผู้คน", tip:"a / an ใช้กับคำนามนับได้เอกพจน์: a friend, an uncle (ขึ้นต้นด้วยเสียงสระใช้ an)", items:[
+    {en:"mother", th:"แม่", s:"My ___ cooks dinner every evening.", t:"แม่ของฉันทำอาหารเย็นทุกเย็น"},
+    {en:"father", th:"พ่อ", s:"Her ___ works at a hospital.", t:"พ่อของเธอทำงานที่โรงพยาบาล"},
+    {en:"sister", th:"พี่สาว / น้องสาว", s:"I have one older ___.", t:"ฉันมีพี่สาวหนึ่งคน"},
+    {en:"brother", th:"พี่ชาย / น้องชาย", s:"My ___ plays football on Sunday.", t:"พี่ชายฉันเล่นฟุตบอลวันอาทิตย์"},
+    {en:"friend", th:"เพื่อน", s:"She is my best ___ at school.", t:"เธอเป็นเพื่อนที่ดีที่สุดของฉันที่โรงเรียน"},
+    {en:"teacher", th:"ครู", s:"Our ___ speaks English very well.", t:"ครูของเราพูดอังกฤษเก่งมาก"},
+    {en:"student", th:"นักเรียน / นักศึกษา", s:"He is a ___ at a big university.", t:"เขาเป็นนักศึกษาในมหาวิทยาลัยใหญ่"},
+    {en:"doctor", th:"หมอ", s:"The ___ says I need more sleep.", t:"หมอบอกว่าฉันต้องนอนมากขึ้น"},
+    {en:"neighbor", th:"เพื่อนบ้าน", s:"Our ___ has three dogs.", t:"เพื่อนบ้านของเรามีหมาสามตัว"},
+    {en:"child", th:"เด็ก", s:"That ___ is only five years old.", t:"เด็กคนนั้นอายุแค่ห้าขวบ"}
+  ]},
+  { name:"อาหารและเครื่องดื่ม", tip:"คำนามนับไม่ได้ (water, rice, sugar) ไม่เติม s และใช้ some: some rice", items:[
+    {en:"rice", th:"ข้าว", s:"I eat ___ with almost every meal.", t:"ฉันกินข้าวแทบทุกมื้อ"},
+    {en:"water", th:"น้ำ", s:"Please drink more ___ when it is hot.", t:"ดื่มน้ำมากขึ้นเวลาอากาศร้อน"},
+    {en:"chicken", th:"ไก่", s:"We order fried ___ on Fridays.", t:"เราสั่งไก่ทอดทุกวันศุกร์"},
+    {en:"egg", th:"ไข่", s:"He eats one boiled ___ every morning.", t:"เขากินไข่ต้มหนึ่งฟองทุกเช้า"},
+    {en:"fruit", th:"ผลไม้", s:"This market sells cheap ___.", t:"ตลาดนี้ขายผลไม้ราคาถูก"},
+    {en:"vegetable", th:"ผัก", s:"Try to eat one ___ at every meal.", t:"พยายามกินผักทุกมื้อ"},
+    {en:"coffee", th:"กาแฟ", s:"She drinks black ___ before work.", t:"เธอดื่มกาแฟดำก่อนไปทำงาน"},
+    {en:"sugar", th:"น้ำตาล", s:"I take my tea without ___.", t:"ฉันดื่มชาไม่ใส่น้ำตาล"},
+    {en:"spicy", th:"เผ็ด", s:"This soup is too ___ for me.", t:"ซุปนี้เผ็ดเกินไปสำหรับฉัน"},
+    {en:"delicious", th:"อร่อย", s:"The noodles here are really ___.", t:"ก๋วยเตี๋ยวที่นี่อร่อยจริง ๆ"}
+  ]},
+  { name:"บ้านและสิ่งของ", tip:"there is + เอกพจน์ / there are + พหูพจน์: There is a chair. There are two chairs.", items:[
+    {en:"house", th:"บ้าน", s:"Their ___ is near the train station.", t:"บ้านของพวกเขาอยู่ใกล้สถานีรถไฟ"},
+    {en:"room", th:"ห้อง", s:"My ___ has a big window.", t:"ห้องของฉันมีหน้าต่างใหญ่"},
+    {en:"kitchen", th:"ครัว", s:"She is cooking in the ___.", t:"เธอกำลังทำอาหารอยู่ในครัว"},
+    {en:"door", th:"ประตู", s:"Please close the ___ quietly.", t:"กรุณาปิดประตูเบา ๆ"},
+    {en:"window", th:"หน้าต่าง", s:"Open the ___ and let the air in.", t:"เปิดหน้าต่างให้อากาศเข้ามา"},
+    {en:"chair", th:"เก้าอี้", s:"There is one empty ___ at the table.", t:"มีเก้าอี้ว่างหนึ่งตัวที่โต๊ะ"},
+    {en:"table", th:"โต๊ะ", s:"Put the plates on the ___.", t:"วางจานไว้บนโต๊ะ"},
+    {en:"phone", th:"โทรศัพท์", s:"My ___ battery is almost empty.", t:"แบตโทรศัพท์ฉันเกือบหมด"},
+    {en:"key", th:"กุญแจ", s:"I cannot find my ___ anywhere.", t:"ฉันหากุญแจไม่เจอเลย"},
+    {en:"bag", th:"กระเป๋า", s:"Her ___ is full of books.", t:"กระเป๋าของเธอเต็มไปด้วยหนังสือ"}
+  ]},
+  { name:"กิริยาในชีวิตประจำวัน", tip:"ประธาน he / she / it กริยาเติม s: he works, she studies", items:[
+    {en:"sleep", th:"นอนหลับ", s:"I usually ___ for eight hours.", t:"ปกติฉันนอนแปดชั่วโมง"},
+    {en:"eat", th:"กิน", s:"We ___ lunch at noon.", t:"เรากินข้าวเที่ยงตอนเที่ยง"},
+    {en:"drink", th:"ดื่ม", s:"They ___ tea after dinner.", t:"พวกเขาดื่มชาหลังอาหารเย็น"},
+    {en:"walk", th:"เดิน", s:"She likes to ___ to the market.", t:"เธอชอบเดินไปตลาด"},
+    {en:"work", th:"ทำงาน", s:"I ___ from home on Mondays.", t:"ฉันทำงานจากบ้านวันจันทร์"},
+    {en:"study", th:"เรียน", s:"They ___ English every evening.", t:"พวกเขาเรียนอังกฤษทุกเย็น"},
+    {en:"buy", th:"ซื้อ", s:"I want to ___ a new phone.", t:"ฉันอยากซื้อโทรศัพท์ใหม่"},
+    {en:"help", th:"ช่วย", s:"Can you ___ me with this bag?", t:"ช่วยถือกระเป๋านี้ได้ไหม"},
+    {en:"listen", th:"ฟัง", s:"Please ___ to the teacher carefully.", t:"กรุณาฟังครูอย่างตั้งใจ"},
+    {en:"understand", th:"เข้าใจ", s:"I do not ___ this question.", t:"ฉันไม่เข้าใจคำถามนี้"}
+  ]},
+  { name:"เวลา ตัวเลข สี", tip:"เวลาใช้ at (at seven) · วันใช้ on (on Monday) · เดือน/ปีใช้ in (in May)", items:[
+    {en:"today", th:"วันนี้", s:"We have a test ___.", t:"เรามีสอบวันนี้"},
+    {en:"tomorrow", th:"พรุ่งนี้", s:"I will call you ___.", t:"ฉันจะโทรหาคุณพรุ่งนี้"},
+    {en:"yesterday", th:"เมื่อวาน", s:"She was sick ___.", t:"เธอป่วยเมื่อวาน"},
+    {en:"morning", th:"ตอนเช้า", s:"I run in the ___.", t:"ฉันวิ่งตอนเช้า"},
+    {en:"night", th:"กลางคืน", s:"The city is quiet at ___.", t:"เมืองเงียบตอนกลางคืน"},
+    {en:"week", th:"สัปดาห์", s:"I go to the gym twice a ___.", t:"ฉันไปยิมสัปดาห์ละสองครั้ง"},
+    {en:"month", th:"เดือน", s:"We pay the rent every ___.", t:"เราจ่ายค่าเช่าทุกเดือน"},
+    {en:"red", th:"สีแดง", s:"Her new bike is ___.", t:"จักรยานใหม่ของเธอสีแดง"},
+    {en:"black", th:"สีดำ", s:"He always wears a ___ shirt.", t:"เขาใส่เสื้อสีดำเสมอ"},
+    {en:"number", th:"ตัวเลข / หมายเลข", s:"Write your phone ___ here.", t:"เขียนหมายเลขโทรศัพท์ของคุณที่นี่"}
+  ]}
+]},
+{ lv:2, name:"ระดับ 2 · กลาง", sub:"ทำงาน เดินทาง สุขภาพ · กริยาวลี", units:[
+  { name:"การทำงานและการเรียน", tip:"Present Perfect: have / has + กริยาช่อง 3 ใช้เล่าประสบการณ์ — I have worked here for two years", items:[
+    {en:"meeting", th:"การประชุม", s:"The ___ starts at nine sharp.", t:"การประชุมเริ่มเก้าโมงตรง"},
+    {en:"salary", th:"เงินเดือน", s:"He is happy with his new ___.", t:"เขาพอใจกับเงินเดือนใหม่"},
+    {en:"deadline", th:"กำหนดส่งงาน", s:"We cannot miss this ___.", t:"เราพลาดกำหนดส่งนี้ไม่ได้"},
+    {en:"report", th:"รายงาน", s:"Please send me the monthly ___.", t:"กรุณาส่งรายงานรายเดือนให้ฉัน"},
+    {en:"interview", th:"การสัมภาษณ์", s:"She has an ___ on Thursday.", t:"เธอมีสัมภาษณ์วันพฤหัสบดี"},
+    {en:"experience", th:"ประสบการณ์", s:"The job needs two years of ___.", t:"งานนี้ต้องการประสบการณ์สองปี"},
+    {en:"skill", th:"ทักษะ", s:"Speaking English is a useful ___.", t:"การพูดอังกฤษเป็นทักษะที่มีประโยชน์"},
+    {en:"colleague", th:"เพื่อนร่วมงาน", s:"My ___ helped me finish the task.", t:"เพื่อนร่วมงานช่วยฉันทำงานให้เสร็จ"},
+    {en:"schedule", th:"ตารางเวลา", s:"My ___ is full this week.", t:"ตารางฉันแน่นทั้งสัปดาห์นี้"},
+    {en:"improve", th:"พัฒนา / ทำให้ดีขึ้น", s:"I want to ___ my writing.", t:"ฉันอยากพัฒนาการเขียนของฉัน"}
+  ]},
+  { name:"การเดินทาง", tip:"ถามทางแบบสุภาพ: Could you tell me how to get to the station?", items:[
+    {en:"airport", th:"สนามบิน", s:"We arrived at the ___ two hours early.", t:"เราถึงสนามบินก่อนสองชั่วโมง"},
+    {en:"ticket", th:"ตั๋ว", s:"I booked a return ___ online.", t:"ฉันจองตั๋วไปกลับทางออนไลน์"},
+    {en:"luggage", th:"กระเป๋าเดินทาง", s:"My ___ was too heavy.", t:"กระเป๋าเดินทางฉันหนักเกินไป"},
+    {en:"passport", th:"หนังสือเดินทาง", s:"Keep your ___ in a safe place.", t:"เก็บหนังสือเดินทางไว้ในที่ปลอดภัย"},
+    {en:"delay", th:"ความล่าช้า", s:"There was a long ___ because of rain.", t:"มีความล่าช้านานเพราะฝน"},
+    {en:"arrive", th:"มาถึง", s:"The bus should ___ before noon.", t:"รถบัสควรมาถึงก่อนเที่ยง"},
+    {en:"book", th:"จอง", s:"I need to ___ a hotel for two nights.", t:"ฉันต้องจองโรงแรมสองคืน"},
+    {en:"traffic", th:"การจราจร", s:"The ___ in the morning is terrible.", t:"การจราจรตอนเช้าแย่มาก"},
+    {en:"direction", th:"ทิศทาง / เส้นทาง", s:"Can you give me the ___ to the station?", t:"บอกเส้นทางไปสถานีให้ฉันได้ไหม"},
+    {en:"abroad", th:"ต่างประเทศ", s:"She has never traveled ___.", t:"เธอไม่เคยไปต่างประเทศ"}
+  ]},
+  { name:"สุขภาพและร่างกาย", tip:"should ใช้แนะนำ: You should see a doctor. / You should not skip meals.", items:[
+    {en:"headache", th:"อาการปวดหัว", s:"I have a bad ___ today.", t:"วันนี้ฉันปวดหัวมาก"},
+    {en:"medicine", th:"ยา", s:"Take this ___ after meals.", t:"กินยานี้หลังอาหาร"},
+    {en:"exercise", th:"การออกกำลังกาย", s:"Daily ___ helps you sleep better.", t:"การออกกำลังกายทุกวันช่วยให้นอนหลับดีขึ้น"},
+    {en:"tired", th:"เหนื่อย", s:"I feel ___ after a long shift.", t:"ฉันรู้สึกเหนื่อยหลังทำงานกะยาว"},
+    {en:"injury", th:"การบาดเจ็บ", s:"His ___ kept him out of the game.", t:"อาการบาดเจ็บทำให้เขาลงเล่นไม่ได้"},
+    {en:"breathe", th:"หายใจ", s:"Try to ___ slowly and relax.", t:"พยายามหายใจช้า ๆ และผ่อนคลาย"},
+    {en:"weight", th:"น้ำหนัก", s:"He lost some ___ last year.", t:"เขาลดน้ำหนักได้บ้างปีที่แล้ว"},
+    {en:"appointment", th:"การนัดหมาย", s:"I made an ___ with the dentist.", t:"ฉันนัดหมอฟันไว้"},
+    {en:"recover", th:"ฟื้นตัว", s:"It took a week to ___ from the flu.", t:"ใช้เวลาหนึ่งสัปดาห์ฟื้นจากไข้หวัด"},
+    {en:"healthy", th:"สุขภาพดี", s:"She keeps a very ___ diet.", t:"เธอกินอาหารที่ดีต่อสุขภาพมาก"}
+  ]},
+  { name:"อารมณ์และบุคลิก", tip:"-ed บอกความรู้สึกคน · -ing บอกลักษณะของสิ่งนั้น: I am bored. / The film is boring.", items:[
+    {en:"excited", th:"ตื่นเต้น (ดีใจ)", s:"The children are ___ about the trip.", t:"เด็ก ๆ ตื่นเต้นกับการไปเที่ยว"},
+    {en:"nervous", th:"ประหม่า", s:"I always feel ___ before a speech.", t:"ฉันประหม่าทุกครั้งก่อนพูด"},
+    {en:"confident", th:"มั่นใจ", s:"He sounds very ___ in interviews.", t:"เขาฟังดูมั่นใจมากในการสัมภาษณ์"},
+    {en:"patient", th:"ใจเย็น", s:"A good teacher must be ___.", t:"ครูที่ดีต้องใจเย็น"},
+    {en:"honest", th:"ซื่อสัตย์ / ตรงไปตรงมา", s:"I prefer an ___ answer.", t:"ฉันชอบคำตอบที่ตรงไปตรงมา"},
+    {en:"lazy", th:"ขี้เกียจ", s:"I was too ___ to cook last night.", t:"เมื่อคืนฉันขี้เกียจเกินกว่าจะทำอาหาร"},
+    {en:"polite", th:"สุภาพ", s:"She is always ___ to customers.", t:"เธอสุภาพกับลูกค้าเสมอ"},
+    {en:"annoyed", th:"รู้สึกรำคาญ", s:"He was ___ by the loud music.", t:"เขารำคาญเสียงเพลงดัง"},
+    {en:"proud", th:"ภูมิใจ", s:"My parents are ___ of my results.", t:"พ่อแม่ภูมิใจในผลงานของฉัน"},
+    {en:"serious", th:"จริงจัง", s:"Are you ___ about moving abroad?", t:"คุณจริงจังเรื่องย้ายไปต่างประเทศไหม"}
+  ]},
+  { name:"กริยาวลีที่ใช้บ่อย", tip:"phrasal verb บางตัวแยกได้: turn the lights off / pick me up", items:[
+    {en:"give up", th:"ยอมแพ้ / เลิกทำ", s:"Do not ___ after one failure.", t:"อย่ายอมแพ้เพราะล้มเหลวครั้งเดียว"},
+    {en:"find out", th:"ค้นหาให้รู้", s:"I will ___ the price for you.", t:"ฉันจะไปหาราคามาให้คุณ"},
+    {en:"look after", th:"ดูแล", s:"Can you ___ my cat this weekend?", t:"ช่วยดูแลแมวฉันสุดสัปดาห์นี้ได้ไหม"},
+    {en:"turn off", th:"ปิด (เครื่อง / ไฟ)", s:"Please ___ the lights before you leave.", t:"กรุณาปิดไฟก่อนออกไป"},
+    {en:"pick up", th:"ไปรับ", s:"I will ___ you at the airport.", t:"ฉันจะไปรับคุณที่สนามบิน"},
+    {en:"run out of", th:"ใช้หมด", s:"We often ___ coffee at the office.", t:"ที่ออฟฟิศกาแฟหมดบ่อย"},
+    {en:"get along", th:"เข้ากันได้", s:"She does not ___ with her boss.", t:"เธอเข้ากับหัวหน้าไม่ได้"},
+    {en:"put off", th:"เลื่อนออกไป", s:"They had to ___ the wedding.", t:"พวกเขาต้องเลื่อนงานแต่ง"},
+    {en:"deal with", th:"จัดการกับ", s:"He knows how to ___ angry customers.", t:"เขารู้วิธีจัดการลูกค้าที่โมโห"},
+    {en:"come up with", th:"คิดขึ้นมาได้", s:"We need to ___ a better plan.", t:"เราต้องคิดแผนที่ดีกว่านี้"}
+  ]}
+]},
+{ lv:3, name:"ระดับ 3 · สูง", sub:"ธุรกิจ ความคิดเห็น สังคม · collocations", units:[
+  { name:"ธุรกิจและการเงิน", tip:"If + past, would + V1 (สมมติปัจจุบัน): If we cut costs, we would save more.", items:[
+    {en:"revenue", th:"รายได้ (ของกิจการ)", s:"Our ___ grew by ten percent.", t:"รายได้ของเราโตขึ้นสิบเปอร์เซ็นต์"},
+    {en:"budget", th:"งบประมาณ", s:"The project went over ___.", t:"โครงการใช้เงินเกินงบ"},
+    {en:"invest", th:"ลงทุน", s:"They decided to ___ in new machines.", t:"พวกเขาตัดสินใจลงทุนในเครื่องจักรใหม่"},
+    {en:"profit", th:"กำไร", s:"The store made a small ___ last month.", t:"ร้านทำกำไรได้เล็กน้อยเดือนที่แล้ว"},
+    {en:"negotiate", th:"เจรจา", s:"We will ___ the terms next week.", t:"เราจะเจรจาเงื่อนไขสัปดาห์หน้า"},
+    {en:"contract", th:"สัญญา", s:"Read the ___ before you sign.", t:"อ่านสัญญาก่อนเซ็น"},
+    {en:"stakeholder", th:"ผู้มีส่วนได้ส่วนเสีย", s:"Every ___ must approve the change.", t:"ผู้มีส่วนได้ส่วนเสียทุกฝ่ายต้องอนุมัติ"},
+    {en:"forecast", th:"การคาดการณ์", s:"The sales ___ looks optimistic.", t:"การคาดการณ์ยอดขายดูสดใส"},
+    {en:"expense", th:"ค่าใช้จ่าย", s:"Travel is our biggest ___.", t:"ค่าเดินทางเป็นค่าใช้จ่ายก้อนใหญ่ที่สุด"},
+    {en:"competitive", th:"แข่งขันสูง", s:"This market is extremely ___.", t:"ตลาดนี้แข่งขันสูงมาก"}
+  ]},
+  { name:"ความคิดและความเห็น", tip:"คำเชื่อมความคิด: however (แต่) · therefore (ดังนั้น) · on the other hand (ในอีกด้าน)", items:[
+    {en:"assume", th:"สันนิษฐาน / คิดเอาเอง", s:"Do not ___ that everyone agrees.", t:"อย่าคิดเอาเองว่าทุกคนเห็นด้วย"},
+    {en:"argue", th:"โต้แย้ง / ให้เหตุผลว่า", s:"Critics ___ that the law is unfair.", t:"นักวิจารณ์แย้งว่ากฎหมายไม่เป็นธรรม"},
+    {en:"evidence", th:"หลักฐาน", s:"There is little ___ for that claim.", t:"มีหลักฐานน้อยมากสำหรับข้ออ้างนั้น"},
+    {en:"convince", th:"โน้มน้าว", s:"He failed to ___ the committee.", t:"เขาโน้มน้าวคณะกรรมการไม่สำเร็จ"},
+    {en:"doubt", th:"สงสัย / ข้อกังขา", s:"I ___ she will change her mind.", t:"ฉันไม่คิดว่าเธอจะเปลี่ยนใจ"},
+    {en:"perspective", th:"มุมมอง", s:"Her ___ is worth hearing.", t:"มุมมองของเธอน่าฟัง"},
+    {en:"assumption", th:"ข้อสมมติ", s:"The plan rests on one weak ___.", t:"แผนนี้ตั้งอยู่บนข้อสมมติที่อ่อน"},
+    {en:"contradict", th:"ขัดแย้งกัน", s:"These two reports ___ each other.", t:"รายงานสองฉบับนี้ขัดแย้งกัน"},
+    {en:"reasonable", th:"สมเหตุสมผล", s:"That sounds like a ___ request.", t:"นั่นฟังดูเป็นคำขอที่สมเหตุสมผล"},
+    {en:"nevertheless", th:"กระนั้นก็ตาม", s:"It rained; ___, the match went ahead.", t:"ฝนตก กระนั้นก็ตามการแข่งก็ดำเนินต่อ"}
+  ]},
+  { name:"เทคโนโลยีและสังคม", tip:"Passive voice: Data is collected by the app. (เน้นสิ่งที่ถูกกระทำ)", items:[
+    {en:"privacy", th:"ความเป็นส่วนตัว", s:"Users worry about their ___ online.", t:"ผู้ใช้กังวลเรื่องความเป็นส่วนตัวออนไลน์"},
+    {en:"algorithm", th:"อัลกอริทึม", s:"The ___ decides what you see.", t:"อัลกอริทึมเป็นตัวกำหนดสิ่งที่คุณเห็น"},
+    {en:"reliable", th:"เชื่อถือได้", s:"We need a more ___ source.", t:"เราต้องการแหล่งข้อมูลที่เชื่อถือได้กว่านี้"},
+    {en:"implement", th:"นำไปใช้จริง", s:"The school will ___ the new rules.", t:"โรงเรียนจะนำกฎใหม่ไปใช้"},
+    {en:"inequality", th:"ความเหลื่อมล้ำ", s:"The report studies income ___.", t:"รายงานศึกษาความเหลื่อมล้ำทางรายได้"},
+    {en:"sustainable", th:"ยั่งยืน", s:"They promise ___ packaging.", t:"พวกเขาสัญญาเรื่องบรรจุภัณฑ์ที่ยั่งยืน"},
+    {en:"regulation", th:"กฎระเบียบ", s:"Stricter ___ may slow innovation.", t:"กฎระเบียบที่เข้มกว่าอาจทำให้นวัตกรรมช้าลง"},
+    {en:"access", th:"การเข้าถึง", s:"Rural areas still lack internet ___.", t:"พื้นที่ชนบทยังขาดการเข้าถึงอินเทอร์เน็ต"},
+    {en:"impact", th:"ผลกระทบ", s:"The policy had a huge ___ on farmers.", t:"นโยบายส่งผลกระทบมหาศาลต่อเกษตรกร"},
+    {en:"widespread", th:"แพร่หลาย", s:"Remote work is now ___.", t:"การทำงานทางไกลแพร่หลายแล้วตอนนี้"}
+  ]},
+  { name:"คำคุณศัพท์ขั้นสูง", tip:"ลำดับคำคุณศัพท์: ความเห็น → ขนาด → อายุ → สี → แหล่งกำเนิด (a lovely small old red Thai box)", items:[
+    {en:"crucial", th:"สำคัญยิ่ง", s:"Timing is ___ in this deal.", t:"จังหวะเวลาสำคัญยิ่งในดีลนี้"},
+    {en:"inevitable", th:"หลีกเลี่ยงไม่ได้", s:"Some delay was ___.", t:"ความล่าช้าบางส่วนหลีกเลี่ยงไม่ได้"},
+    {en:"ambiguous", th:"กำกวม", s:"The wording is too ___.", t:"ถ้อยคำกำกวมเกินไป"},
+    {en:"thorough", th:"ละเอียดถี่ถ้วน", s:"She gave a ___ explanation.", t:"เธออธิบายอย่างละเอียดถี่ถ้วน"},
+    {en:"feasible", th:"ทำได้จริง", s:"Is that plan really ___?", t:"แผนนั้นทำได้จริงหรือ"},
+    {en:"subtle", th:"ละเอียดอ่อน / สังเกตยาก", s:"There is a ___ difference between them.", t:"มีความต่างเล็กน้อยที่สังเกตยากระหว่างสองสิ่ง"},
+    {en:"redundant", th:"ซ้ำซ้อน / เกินจำเป็น", s:"Half of the text is ___.", t:"ข้อความครึ่งหนึ่งซ้ำซ้อน"},
+    {en:"vulnerable", th:"เปราะบาง / เสี่ยง", s:"Older systems are ___ to attack.", t:"ระบบเก่าเสี่ยงต่อการถูกโจมตี"},
+    {en:"consistent", th:"สม่ำเสมอ / สอดคล้อง", s:"His results are very ___.", t:"ผลงานของเขาสม่ำเสมอมาก"},
+    {en:"overwhelming", th:"ท่วมท้น", s:"The response was ___.", t:"การตอบรับท่วมท้น"}
+  ]},
+  { name:"สำนวนและคำที่มักใช้คู่กัน", tip:"collocation คือคำที่มักอยู่คู่กัน: make a decision (ไม่ใช่ do a decision)", items:[
+    {en:"take into account", th:"คำนึงถึง", s:"We must ___ the extra cost.", t:"เราต้องคำนึงถึงค่าใช้จ่ายเพิ่ม"},
+    {en:"make a decision", th:"ตัดสินใจ", s:"They will ___ by Friday.", t:"พวกเขาจะตัดสินใจภายในวันศุกร์"},
+    {en:"raise concerns", th:"ตั้งข้อกังวล", s:"Several parents ___ about safety.", t:"ผู้ปกครองหลายคนตั้งข้อกังวลเรื่องความปลอดภัย"},
+    {en:"meet a deadline", th:"ส่งงานทันกำหนด", s:"The team worked late to ___.", t:"ทีมทำงานดึกเพื่อส่งงานทันกำหนด"},
+    {en:"keep in mind", th:"จำไว้ / คำนึงไว้", s:"Please ___ that prices may change.", t:"โปรดจำไว้ว่าราคาอาจเปลี่ยน"},
+    {en:"on the whole", th:"โดยรวมแล้ว", s:"___, the year went well.", t:"โดยรวมแล้วปีนี้ไปได้ดี"},
+    {en:"in the long run", th:"ในระยะยาว", s:"Saving now pays off ___.", t:"การเก็บเงินตอนนี้คุ้มค่าในระยะยาว"},
+    {en:"cut corners", th:"ลัดขั้นตอนเพื่อประหยัด", s:"Do not ___ on safety checks.", t:"อย่าลัดขั้นตอนการตรวจความปลอดภัย"},
+    {en:"bring up", th:"ยกเรื่องขึ้นมาพูด", s:"She did not ___ the topic again.", t:"เธอไม่ได้ยกเรื่องนั้นขึ้นมาพูดอีก"},
+    {en:"take over", th:"เข้ามารับช่วงต่อ", s:"A larger firm will ___ the company.", t:"บริษัทที่ใหญ่กว่าจะเข้ามาเทคโอเวอร์"}
+  ]}
+]}
+];
+
+/* ------------------------- 2. สถานะและการบันทึก ------------------------- */
+var KEY="engplay_v1";
+var S=null;
+function fresh(){return{v:2,items:{},xp:0,ans:0,cor:0,n:0,days:{},last:"",streak:0,best:0,
+  unlocked:1,modes:{},placed:false,sessions:0,ok:{},gerr:{},wr:{c:0,t:0},daily:"",ai:true,cust:[]};}
+function load(){try{var r=localStorage.getItem(KEY);S=r?JSON.parse(r):fresh();}catch(e){S=fresh();}
+  var f=fresh();for(var k in f)if(S[k]===undefined)S[k]=f[k];}
+var cloudClient=null,authUser=null,cloudTimer=null,cloudHydrating=false,cloudStatus="ยังไม่ได้เชื่อมต่อ";
+function save(){
+  try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+  if(authUser&&!cloudHydrating&&cloudClient){
+    cloudStatus="กำลังบันทึก...";
+    clearTimeout(cloudTimer);
+    cloudTimer=setTimeout(pushCloud,900);
+  }
+}
+function cloudConfigured(){return !!(window.ENGPLAY_CONFIG&&window.ENGPLAY_CONFIG.SUPABASE_URL&&window.ENGPLAY_CONFIG.SUPABASE_ANON_KEY&&window.ENGPLAY_CONFIG.SUPABASE_URL.indexOf("YOUR_")<0);}
+function initCloud(){
+  if(!window.supabase||!cloudConfigured()){cloudStatus="ยังไม่ได้ตั้งค่า Supabase";return;}
+  cloudClient=window.supabase.createClient(window.ENGPLAY_CONFIG.SUPABASE_URL,window.ENGPLAY_CONFIG.SUPABASE_ANON_KEY);
+  cloudClient.auth.onAuthStateChange(function(event,session){
+    if(event==="INITIAL_SESSION"||event==="SIGNED_IN"||event==="TOKEN_REFRESHED"||event==="SIGNED_OUT"){
+      setTimeout(function(){handleAuthSession(session);},0);
+    }
+  });
+}
+async function handleAuthSession(session){
+  authUser=session&&session.user?session.user:null;
+  if(!authUser){cloudStatus="ยังไม่ได้เข้าสู่ระบบ";if(document.getElementById("accountBox"))render();return;}
+  cloudStatus="กำลังโหลดข้อมูลจาก Cloud...";
+  try{
+    var result=await cloudClient.from("user_progress").select("payload,updated_at").eq("user_id",authUser.id).maybeSingle();
+    if(result.error)throw result.error;
+    if(result.data&&result.data.payload){
+      cloudHydrating=true;S=Object.assign(fresh(),result.data.payload);applyCustom();
+      try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}
+      cloudHydrating=false;cloudStatus="ซิงก์ข้อมูลล่าสุดแล้ว";
+    }else{
+      cloudStatus="กำลังย้ายข้อมูลเดิมขึ้น Cloud...";await pushCloud();
+    }
+  }catch(e){cloudHydrating=false;cloudStatus="ซิงก์ไม่สำเร็จ: "+(e.message||"ตรวจสอบการตั้งค่า");console.error("EngPlay cloud sync",e);}
+  if(document.getElementById("accountBox"))render();
+}
+async function pushCloud(){
+  if(!authUser||!cloudClient||cloudHydrating)return;
+  try{
+    var result=await cloudClient.from("user_progress").upsert({user_id:authUser.id,payload:S,updated_at:new Date().toISOString()},{onConflict:"user_id"});
+    if(result.error)throw result.error;
+    cloudStatus="บันทึกบน Cloud แล้ว · "+new Date().toLocaleTimeString("th-TH",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){cloudStatus="บันทึก Cloud ไม่สำเร็จ";console.error("EngPlay cloud save",e);}
+  var box=document.getElementById("cloudStatus");if(box)box.textContent=cloudStatus;
+}
+function accountHTML(){
+  var signed=!!authUser;
+  return '<section class="card" id="accountBox" style="margin:0 0 14px;border-color:var(--brand)">'+
+    '<div class="row"><div style="flex:1;min-width:0"><b>'+(signed?'👤 '+esc(authUser.email||"สมาชิก EngPlay"):'☁️ บันทึกความก้าวหน้าบน Cloud')+'</b>'+ 
+    '<div class="xs dim" id="cloudStatus" style="margin-top:3px">'+esc(signed?cloudStatus:"สมัครสมาชิกหรือเข้าสู่ระบบเพื่อเก็บ XP และความคืบหน้าออนไลน์")+'</div></div>'+
+    (signed?'<button class="pill" id="epSignOut">ออกจากระบบ</button>':'<button class="pill" id="epSignIn">เข้าสู่ระบบ</button>')+'</div>'+
+    (!signed?'<button class="btn sm2" id="epSignUp" style="margin-top:11px">สมัครสมาชิกฟรี</button>':'')+
+    '</section>';
+}
+function showAuthModal(mode){
+  var old=document.getElementById("epAuthModal");if(old)old.remove();
+  var d=document.createElement("div");d.id="epAuthModal";d.style.cssText="position:fixed;inset:0;z-index:120;background:rgba(5,8,18,.82);display:flex;align-items:center;justify-content:center;padding:20px";
+  d.innerHTML='<div class="card" style="width:100%;max-width:390px"><div class="row"><b style="font-size:18px;flex:1">'+(mode==="signup"?"สมัครสมาชิก EngPlay":"เข้าสู่ระบบ EngPlay")+'</b><button class="pill" id="epAuthClose">ปิด</button></div>'+ 
+    '<div class="sm dim" style="margin:8px 0 14px">'+(mode==="signup"?"สร้างบัญชีเพื่อบันทึกความก้าวหน้าของคุณ":"เข้าสู่ระบบเพื่อโหลดข้อมูลการเรียนของคุณ")+'</div>'+ 
+    '<label class="sm">อีเมล</label><input id="epEmail" type="email" autocomplete="email" placeholder="you@example.com" style="width:100%;margin:5px 0 12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--txt)">'+
+    '<label class="sm">รหัสผ่าน (อย่างน้อย 6 ตัวอักษร)</label><input id="epPassword" type="password" autocomplete="'+(mode==="signup"?"new-password":"current-password")+'" placeholder="รหัสผ่าน" style="width:100%;margin:5px 0 12px;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;color:var(--txt)">'+
+    '<div id="epAuthMsg" class="xs dim" style="min-height:20px;margin-bottom:8px"></div><button class="btn" id="epAuthSubmit">'+(mode==="signup"?"สมัครสมาชิก":"เข้าสู่ระบบ")+'</button>'+
+    '<button class="btn ghost sm2" id="epAuthSwitch" style="margin-top:8px">'+(mode==="signup"?"มีบัญชีแล้ว? เข้าสู่ระบบ":"ยังไม่มีบัญชี? สมัครสมาชิก")+'</button></div>';
+  document.body.appendChild(d);
+  d.querySelector("#epAuthClose").onclick=function(){d.remove();};
+  d.querySelector("#epAuthSwitch").onclick=function(){showAuthModal(mode==="signup"?"login":"signup");};
+  d.onclick=function(e){if(e.target===d)d.remove();};
+  d.querySelector("#epAuthSubmit").onclick=async function(){
+    var email=d.querySelector("#epEmail").value.trim(),password=d.querySelector("#epPassword").value,msg=d.querySelector("#epAuthMsg"),btn=d.querySelector("#epAuthSubmit");
+    if(!email||!password){msg.textContent="กรุณากรอกอีเมลและรหัสผ่าน";return;}
+    if(password.length<6){msg.textContent="รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร";return;}
+    btn.disabled=true;msg.textContent="กำลังดำเนินการ...";
+    var res=mode==="signup"?await cloudClient.auth.signUp({email:email,password:password}):await cloudClient.auth.signInWithPassword({email:email,password:password});
+    btn.disabled=false;
+    if(res.error){msg.textContent=res.error.message;return;}
+    if(mode==="signup"&&!res.data.session){msg.textContent="สมัครสำเร็จ กรุณาตรวจอีเมลเพื่อยืนยันบัญชีก่อนเข้าสู่ระบบ";return;}
+    d.remove();
+  };
+}
+function bindAccount(){
+  var a=document.getElementById("epSignIn"),b=document.getElementById("epSignUp"),o=document.getElementById("epSignOut");
+  if(a)a.onclick=function(){if(!cloudClient){toast("กรุณาตั้งค่า Supabase ก่อน");return;}showAuthModal("login");};
+  if(b)b.onclick=function(){if(!cloudClient){toast("กรุณาตั้งค่า Supabase ก่อน");return;}showAuthModal("signup");};
+  if(o)o.onclick=async function(){await cloudClient.auth.signOut();toast("ออกจากระบบแล้ว");};
+}
+function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function dayKey(off){var d=new Date();d.setDate(d.getDate()-off);return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function touchDay(){
+  var t=today();
+  if(S.last!==t){
+    var y=dayKey(1);
+    S.streak=(S.last===y)?S.streak+1:1;
+    if(S.streak>S.best)S.best=S.streak;
+    S.last=t;
+  }
+  S.days[t]=(S.days[t]||0)+1;
+  var keep={};for(var i=0;i<14;i++){var k=dayKey(i);if(S.days[k])keep[k]=S.days[k];}
+  S.days=keep;
+}
+
+/* ตัวช่วยเกี่ยวกับคลังคำ */
+function allItems(lv){var o=[];BANK.forEach(function(L){if(lv&&L.lv!==lv)return;
+  L.units.forEach(function(U,ui){U.items.forEach(function(it){
+    o.push({en:it.en,th:it.th,s:it.s,t:it.t,lv:L.lv,ui:ui,un:U.name,key:L.lv+"|"+it.en});});});});return o;}
+var ALL=allItems();
+function st(k){return S.items[k]||(S.items[k]={b:0,d:0,c:0,w:0});}
+function mastered(k){var x=S.items[k];return x&&x.b>=3;}
+function lvProgress(lv){var a=allItems(lv),m=0;a.forEach(function(i){if(mastered(i.key))m++;});
+  return{m:m,total:a.length,pct:Math.round(m/a.length*100)};}
+function unitProgress(lv,ui){var a=allItems(lv).filter(function(i){return i.ui===ui;}),m=0,seen=0;
+  a.forEach(function(i){if(mastered(i.key))m++;if(S.items[i.key])seen++;});
+  return{m:m,total:a.length,seen:seen,pct:Math.round(m/a.length*100)};}
+function unlockedLv(){
+  var u=S.unlocked;
+  if(u<2&&lvProgress(1).pct>=50)u=2;
+  if(u<3&&u>=2&&lvProgress(2).pct>=50)u=3;
+  if(u!==S.unlocked){S.unlocked=u;save();}
+  return u;
+}
+function genProgress(){var seen=0,m=0;GEN.forEach(function(g){var x=S.items["g|"+g.id];
+  if(x){seen++;if(x.b>=3)m++;}});return{seen:seen,m:m};}
+function dueCount(lv){var n=0;allItems(lv).forEach(function(i){var x=S.items[i.key];
+  if(x&&x.b<5&&x.d<=S.n)n++;});return n;}
+
+/* --------------------------- 3. เครื่องมือย่อย --------------------------- */
+var $=function(s,r){return (r||document).querySelector(s);};
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function pick(a,n){return shuffle(a).slice(0,n);}
+/* กล่องยืนยันของแอปเอง (confirm ของเบราว์เซอร์ถูกปิดในหน้าที่เผยแพร่) */
+function ask(msg,onYes,yesLabel){
+  var d=document.createElement("div");
+  d.style.cssText="position:fixed;inset:0;z-index:95;background:rgba(5,8,18,.72);display:flex;"+
+    "align-items:center;justify-content:center;padding:22px";
+  d.innerHTML='<div class="card" style="max-width:360px;width:100%">'+
+    '<div style="font-weight:600;font-size:16px">'+esc(msg)+'</div>'+
+    '<button class="btn sm2" id="akY" style="margin-top:14px">'+esc(yesLabel||"ยืนยัน")+'</button>'+
+    '<button class="btn ghost sm2" id="akN" style="margin-top:9px">ยกเลิก</button></div>';
+  document.body.appendChild(d);
+  d.querySelector("#akY").onclick=function(){d.remove();onYes();};
+  d.querySelector("#akN").onclick=function(){d.remove();};
+  d.onclick=function(e){if(e.target===d)d.remove();};
+}
+function toast(msg){var d=document.createElement("div");d.className="toast";d.textContent=msg;
+  document.body.appendChild(d);setTimeout(function(){d.remove();},1800);}
+function speak(txt){
+  try{
+    if(!window.speechSynthesis)return;
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(txt);u.lang="en-US";u.rate=.85;
+    var vs=speechSynthesis.getVoices();
+    for(var i=0;i<vs.length;i++){if(/en[-_]US/i.test(vs[i].lang)){u.voice=vs[i];break;}}
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+if(window.speechSynthesis)speechSynthesis.onvoiceschanged=function(){};
+function ringSVG(pct){
+  var r=16,c=2*Math.PI*r,off=c*(1-pct/100);
+  return '<div class="ring"><svg width="38" height="38" viewBox="0 0 38 38">'+
+  '<circle cx="19" cy="19" r="16" fill="none" stroke="#2c3761" stroke-width="4"/>'+
+  '<circle cx="19" cy="19" r="16" fill="none" stroke="'+(pct>=100?"#2fd27a":"#5b8cff")+'" stroke-width="4" '+
+  'stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"/></svg>'+
+  '<span>'+pct+'%</span></div>';
+}
+var SPK='<svg viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9H4zm12.5 3a4.5 4.5 0 0 0-2-3.7v7.4a4.5 4.5 0 0 0 2-3.7zm-2-8.4v2.1A7 7 0 0 1 14.5 20v2.1A9 9 0 0 0 14.5 3.6z"/></svg>';
+
+/* ================= 3b. เครื่องสร้างโจทย์ไวยากรณ์ (ไม่รู้จบ) ================= */
+var RND=Math.random;
+function rp(a){return a[Math.floor(RND()*a.length)];}
+function rp2(a){var x=rp(a),y=rp(a),n=0;while(y===x&&n++<20)y=rp(a);return[x,y];}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);
+  t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function seedFrom(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
+function low(s){return s==="I"?s:s.charAt(0).toLowerCase()+s.slice(1);}
+function uniq(a){var o=[];a.forEach(function(x){if(o.indexOf(x)<0)o.push(x);});return o;}
+function dis3(list,ans){return uniq(list).filter(function(x){return x!==ans;}).slice(0,3);}
+
+var SUBJ=[
+ {e:"I",op:"me",t:"ฉัน",th3:false,be:"am",bp:"was",dd:"do",hv:"have"},
+ {e:"You",op:"you",t:"คุณ",th3:false,be:"are",bp:"were",dd:"do",hv:"have"},
+ {e:"She",op:"her",t:"เธอ",th3:true,be:"is",bp:"was",dd:"does",hv:"has"},
+ {e:"He",op:"him",t:"เขา",th3:true,be:"is",bp:"was",dd:"does",hv:"has"},
+ {e:"We",op:"us",t:"พวกเรา",th3:false,be:"are",bp:"were",dd:"do",hv:"have"},
+ {e:"They",op:"them",t:"พวกเขา",th3:false,be:"are",bp:"were",dd:"do",hv:"have"},
+ {e:"My brother",op:"my brother",t:"พี่ชายฉัน",th3:true,be:"is",bp:"was",dd:"does",hv:"has"},
+ {e:"The teacher",op:"the teacher",t:"ครู",th3:true,be:"is",bp:"was",dd:"does",hv:"has"},
+ {e:"My friends",op:"my friends",t:"เพื่อน ๆ ของฉัน",th3:false,be:"are",bp:"were",dd:"do",hv:"have"}
+];
+var VERB=[
+ {b:"eat",s:"eats",p:"ate",pp:"eaten",g:"eating",t:"กิน",o:[["rice","ข้าว"],["noodles","ก๋วยเตี๋ยว"],["breakfast","อาหารเช้า"]]},
+ {b:"watch",s:"watches",p:"watched",pp:"watched",g:"watching",t:"ดู",o:[["a movie","หนัง"],["the news","ข่าว"]]},
+ {b:"buy",s:"buys",p:"bought",pp:"bought",g:"buying",t:"ซื้อ",o:[["a new phone","โทรศัพท์ใหม่"],["some fruit","ผลไม้"]]},
+ {b:"finish",s:"finishes",p:"finished",pp:"finished",g:"finishing",t:"ทำ...เสร็จ",o:[["the report","รายงาน"],["the homework","การบ้าน"]]},
+ {b:"clean",s:"cleans",p:"cleaned",pp:"cleaned",g:"cleaning",t:"ทำความสะอาด",o:[["the kitchen","ห้องครัว"],["the room","ห้อง"]]},
+ {b:"study",s:"studies",p:"studied",pp:"studied",g:"studying",t:"เรียน",o:[["English","ภาษาอังกฤษ"],["math","คณิตศาสตร์"]]},
+ {b:"send",s:"sends",p:"sent",pp:"sent",g:"sending",t:"ส่ง",o:[["an email","อีเมล"],["the file","ไฟล์"]]},
+ {b:"call",s:"calls",p:"called",pp:"called",g:"calling",t:"โทรหา",o:[["the doctor","หมอ"],["the manager","ผู้จัดการ"]]},
+ {b:"visit",s:"visits",p:"visited",pp:"visited",g:"visiting",t:"ไปเยี่ยม",o:[["the museum","พิพิธภัณฑ์"],["the new office","ออฟฟิศใหม่"]]},
+ {b:"write",s:"writes",p:"wrote",pp:"written",g:"writing",t:"เขียน",o:[["a letter","จดหมาย"],["the report","รายงาน"]]},
+ {b:"read",s:"reads",p:"read",pp:"read",g:"reading",t:"อ่าน",o:[["the news","ข่าว"],["a book","หนังสือ"]]},
+ {b:"fix",s:"fixes",p:"fixed",pp:"fixed",g:"fixing",t:"ซ่อม",o:[["the car","รถ"],["my laptop","แล็ปท็อปของฉัน"]]}
+];
+var TIMEN=[["every day","ทุกวัน"],["on Sundays","ทุกวันอาทิตย์"],["after work","หลังเลิกงาน"],["every morning","ทุกเช้า"]];
+var TIMEP=[["yesterday","เมื่อวาน"],["last night","เมื่อคืน"],["last week","สัปดาห์ที่แล้ว"]];
+var TIMEF=[["tomorrow","พรุ่งนี้"],["next week","สัปดาห์หน้า"],["this evening","เย็นนี้"]];
+var THING=[["a chair","เก้าอี้หนึ่งตัว",0],["two windows","หน้าต่างสองบาน",1],["three students","นักเรียนสามคน",1],
+ ["a big table","โต๊ะตัวใหญ่",0],["some books","หนังสือหลายเล่ม",1],["a new computer","คอมพิวเตอร์เครื่องใหม่",0],
+ ["four chairs","เก้าอี้สี่ตัว",1],["a small fridge","ตู้เย็นเครื่องเล็ก",0],["many people","ผู้คนจำนวนมาก",1]];
+var PLACE=[["in the kitchen","ในครัว"],["near the door","ใกล้ประตู"],["at the office","ที่ออฟฟิศ"],
+ ["in my bag","ในกระเป๋าฉัน"],["next to the window","ข้างหน้าต่าง"],["in the meeting room","ในห้องประชุม"],
+ ["at the station","ที่สถานี"],["under the table","ใต้โต๊ะ"]];
+var ADJ=[{b:"big",c:"bigger",t:"ใหญ่"},{b:"cheap",c:"cheaper",t:"ถูก"},{b:"busy",c:"busier",t:"ยุ่ง"},
+ {b:"expensive",c:"more expensive",t:"แพง"},{b:"difficult",c:"more difficult",t:"ยาก"},{b:"useful",c:"more useful",t:"มีประโยชน์"}];
+var NOUNC=[["this phone","โทรศัพท์เครื่องนี้"],["that bag","กระเป๋าใบนั้น"],["my laptop","แล็ปท็อปของฉัน"],["the blue shirt","เสื้อสีฟ้า"]];
+var IF1=[{c:"it rains",cb:"rain",cs:"rains",ct:"ฝนตก",r:"we will stay at home",rt:"เราจะอยู่บ้าน"},
+ {c:"you leave now",cb:"leave",cs:"leave",ct:"คุณออกไปตอนนี้",r:"you will catch the bus",rt:"คุณจะทันรถบัส"},
+ {c:"she calls me",cb:"call",cs:"calls",ct:"เธอโทรหาฉัน",r:"I will tell her the news",rt:"ฉันจะบอกข่าวเธอ"},
+ {c:"the price goes up",cb:"go",cs:"goes",ct:"ราคาขึ้น",r:"we will buy less",rt:"เราจะซื้อน้อยลง"},
+ {c:"they arrive early",cb:"arrive",cs:"arrive",ct:"พวกเขามาถึงเร็ว",r:"we will start the meeting",rt:"เราจะเริ่มประชุม"},
+ {c:"he misses the train",cb:"miss",cs:"misses",ct:"เขาตกรถไฟ",r:"he will be late for work",rt:"เขาจะไปทำงานสาย"},
+ {c:"the team finishes today",cb:"finish",cs:"finishes",ct:"ทีมทำเสร็จวันนี้",r:"the client will be happy",rt:"ลูกค้าจะพอใจ"},
+ {c:"you study every day",cb:"study",cs:"study",ct:"คุณเรียนทุกวัน",r:"your English will improve",rt:"ภาษาอังกฤษของคุณจะดีขึ้น"}];
+var FRAME3=[
+ {n:"Conditional 2 (สมมติที่ไม่จริง)",tip:"If + กริยาช่อง 2, ประธาน + would + กริยาธรรมดา",
+  e:"If I had more time, I would study Japanese.",t:"ถ้าฉันมีเวลามากกว่านี้ ฉันจะเรียนภาษาญี่ปุ่น",a:"would study",d:["will study","would studied","would studies"]},
+ {n:"Conditional 2 (สมมติที่ไม่จริง)",tip:"ใน if-clause ของแบบที่ 2 ใช้กริยาช่อง 2 เสมอ",
+  e:"If we knew the answer, we would tell you.",t:"ถ้าเรารู้คำตอบ เราจะบอกคุณ",a:"knew",d:["know","will know","known"]},
+ {n:"Reported speech (เล่าคำพูด)",tip:"เล่าคำพูดย้อนหลัง กริยาถอยไปหนึ่งขั้น: am → was, will → would",
+  e:"She said that she was tired.",t:"เธอบอกว่าเธอเหนื่อย",a:"was",d:["is","were","be"]},
+ {n:"Reported speech (เล่าคำพูด)",tip:"He said (that) he would + กริยาธรรมดา",
+  e:"He said that he would call me later.",t:"เขาบอกว่าเขาจะโทรหาฉันทีหลัง",a:"would call",d:["will call","would called","would calls"]},
+ {n:"Relative clause (ขยายคำนาม)",tip:"who ใช้ขยายคน · which/that ใช้ขยายสิ่งของ",
+  e:"The colleague who wrote the report is on leave.",t:"เพื่อนร่วมงานที่เขียนรายงานลาหยุดอยู่",a:"who",d:["which","whose","where"]},
+ {n:"Relative clause (ขยายคำนาม)",tip:"which ใช้กับสิ่งของ ไม่ใช้ who",
+  e:"The app which collects your data is free.",t:"แอปที่เก็บข้อมูลของคุณนั้นฟรี",a:"which",d:["who","whom","what"]},
+ {n:"Passive perfect",tip:"has/have been + กริยาช่อง 3 = ถูกกระทำและเสร็จแล้ว",
+  e:"The contract has been signed by both sides.",t:"สัญญาถูกเซ็นแล้วโดยทั้งสองฝ่าย",a:"has been",d:["have been","has being","is been"]},
+ {n:"Linking words (คำเชื่อม)",tip:"however = แต่อย่างไรก็ตาม ใช้ขึ้นประโยคใหม่",
+  e:"The plan is cheap; however, it is risky.",t:"แผนนี้ถูก แต่อย่างไรก็ตามมันเสี่ยง",a:"however",d:["therefore","because","although"]},
+ {n:"Linking words (คำเชื่อม)",tip:"therefore = ดังนั้น ใช้บอกผลที่ตามมา",
+  e:"Costs rose sharply; therefore, we cut the budget.",t:"ต้นทุนพุ่งสูง ดังนั้นเราจึงตัดงบ",a:"therefore",d:["however","unless","while"]},
+ {n:"Gerund / infinitive",tip:"หลัง avoid, enjoy, suggest ใช้ V-ing · หลัง decide, agree, plan ใช้ to + V",
+  e:"They decided to invest in new machines.",t:"พวกเขาตัดสินใจลงทุนในเครื่องจักรใหม่",a:"to invest",d:["investing","invest","invested"]},
+ {n:"Gerund / infinitive",tip:"หลัง avoid ใช้ V-ing เสมอ",
+  e:"We should avoid cutting corners on safety.",t:"เราควรเลี่ยงการลัดขั้นตอนเรื่องความปลอดภัย",a:"cutting",d:["to cut","cut","cuts"]},
+ {n:"Modal verbs",tip:"must = จำเป็นต้อง · should = ควร · might = อาจจะ",
+  e:"Every stakeholder must approve the change.",t:"ผู้มีส่วนได้ส่วนเสียทุกฝ่ายจำเป็นต้องอนุมัติการเปลี่ยนแปลง",a:"must",d:["musts","must to","can to"]}
+];
+
+/* แต่ละแบบคืนค่า {id,lv,n,tip,e,t,a,d,h} : e=ประโยคเป้าหมาย a=คำตอบ d=ตัวลวง h=คำใบ้ */
+var GEN=[
+{id:"g1",lv:1,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),m=rp(TIMEN),fm=s.th3?v.s:v.b;
+  return{n:"Present Simple (บอกเล่า)",tip:s.th3?"ประธานเอกพจน์ (he/she/it) กริยาเติม -s/-es":"ประธาน I/you/we/they ใช้กริยารูปธรรมดา ไม่เติม s",
+   e:s.e+" "+fm+" "+o[0]+" "+m[0]+".",t:s.t+v.t+o[1]+m[1],a:fm,d:dis3([v.b,v.s,v.g,v.p],fm),h:[s.e,v.b,o[0],m[0]]};}},
+{id:"g2",lv:1,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),ax=s.th3?"does not":"do not";
+  return{n:"Present Simple (ปฏิเสธ)",tip:"หลัง do not / does not ใช้กริยารูปธรรมดาเสมอ (ไม่เติม s)",
+   e:s.e+" "+ax+" "+v.b+" "+o[0]+".",t:s.t+"ไม่"+v.t+o[1],a:ax,d:dis3(["do not","does not","did not","is not"],ax),h:[s.e,"not",v.b,o[0]]};}},
+{id:"g3",lv:1,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),ax=s.th3?"Does":"Do";
+  return{n:"คำถาม Yes / No",tip:"ขึ้นต้นด้วย Do / Does แล้วตามด้วยประธานและกริยารูปธรรมดา",
+   e:ax+" "+low(s.e)+" "+v.b+" "+o[0]+"?",t:s.t+v.t+o[1]+"หรือเปล่า",a:ax,d:dis3(["Do","Does","Did","Are"],ax),h:[s.e,v.b,o[0],"?"]};}},
+{id:"g4",lv:1,f:function(){var th=rp(THING),pl=rp(PLACE),n=0;
+  while(n++<10&&pl[0].split(" ").some(function(w){return th[0].indexOf(w)>=0&&w.length>3;}))pl=rp(PLACE);
+  var be=th[2]?"are":"is";
+  return{n:"There is / There are",tip:"There is + คำนามเอกพจน์ · There are + คำนามพหูพจน์",
+   e:"There "+be+" "+th[0]+" "+pl[0]+".",t:"มี"+th[1]+pl[1],a:be,d:["is","are","be","have"].filter(function(x){return x!==be;}).slice(0,3),h:["there",th[0],pl[0]]};}},
+{id:"g5",lv:2,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),m=rp(TIMEP);
+  return{n:"Past Simple",tip:"ประโยคอดีตใช้กริยาช่อง 2 เหมือนกันหมดทุกประธาน",
+   e:s.e+" "+v.p+" "+o[0]+" "+m[0]+".",t:s.t+v.t+o[1]+m[1],a:v.p,d:dis3([v.b,v.s,v.g,v.pp],v.p),h:[s.e,v.b,o[0],m[0]]};}},
+{id:"g6",lv:2,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),m=rp(TIMEP);
+  return{n:"Past Simple (ปฏิเสธ)",tip:"หลัง did not กริยากลับเป็นรูปธรรมดา ไม่ใช่ช่อง 2",
+   e:s.e+" did not "+v.b+" "+o[0]+" "+m[0]+".",t:s.t+"ไม่ได้"+v.t+o[1]+m[1],a:"did not",d:["does not","do not","was not"],h:[s.e,"not",v.b,m[0]]};}},
+{id:"g7",lv:2,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),useBe=RND()<.5;
+  return{n:"Present Continuous",tip:"กำลังทำอยู่ตอนนี้ = is / am / are + V-ing",
+   e:s.e+" "+s.be+" "+v.g+" "+o[0]+" now.",t:s.t+"กำลัง"+v.t+o[1]+"อยู่ตอนนี้",
+   a:useBe?s.be:v.g,d:useBe?dis3(["is","am","are","be"],s.be):dis3([v.b,v.s,v.p,v.g],v.g),h:[s.e,v.b,o[0],"now"]};}},
+{id:"g8",lv:2,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),useHv=RND()<.5;
+  return{n:"Present Perfect",tip:"have / has + กริยาช่อง 3 ใช้กับสิ่งที่เพิ่งเสร็จหรือมีผลถึงตอนนี้",
+   e:s.e+" "+s.hv+" already "+v.pp+" "+o[0]+".",t:s.t+v.t+o[1]+"แล้ว",
+   a:useHv?s.hv:v.pp,d:useHv?dis3(["have","has","had","is"],s.hv):dis3([v.b,v.s,v.p,v.pp],v.pp),h:[s.e,v.b,o[0],"already"]};}},
+{id:"g9",lv:2,f:function(){var s=rp(SUBJ),v=rp(VERB),o=rp(v.o),m=rp(TIMEF);
+  return{n:"Future (will)",tip:"หลัง will ใช้กริยารูปธรรมดาเสมอ ไม่เติม s และไม่ผันอดีต",
+   e:s.e+" will "+v.b+" "+o[0]+" "+m[0]+".",t:s.t+"จะ"+v.t+o[1]+m[1],a:v.b,d:dis3([v.s,v.p,v.g,v.pp],v.b),h:[s.e,"will",v.b,m[0]]};}},
+{id:"g10",lv:2,f:function(){var n=rp2(NOUNC),a=rp(ADJ);
+  return{n:"ขั้นกว่า (comparative)",tip:"คำสั้นเติม -er · คำยาวใช้ more + adjective · ตามด้วย than",
+   e:cap(n[0][0])+" is "+a.c+" than "+n[1][0]+".",t:n[0][1]+a.t+"กว่า"+n[1][1],
+   a:a.c,d:dis3([a.b,"more "+a.b,"most "+a.b,a.b+"er"],a.c),h:[n[0][0],a.b,"than",n[1][0]]};}},
+{id:"g11",lv:3,f:function(){var s=rp(SUBJ),v=rp(VERB),m=rp(TIMEP),
+  os=v.o.filter(function(x){return x[0]!=="noodles";}),o=rp(os.length?os:v.o);
+  return{n:"Passive voice (ถูกกระทำ)",tip:"Passive = be + กริยาช่อง 3 แล้วตามด้วย by + ผู้กระทำ (ใช้สรรพนามรูปกรรม: me, him, her, us, them)",
+   e:cap(o[0])+" was "+v.pp+" by "+s.op+" "+m[0]+".",t:o[1]+"ถูก"+s.t+v.t+m[1],
+   a:v.pp,d:dis3([v.b,v.s,v.p,v.g],v.pp),h:[o[0],"was",v.b,s.op]};}},
+{id:"g12",lv:3,f:function(){var c=rp(IF1);
+  return{n:"Conditional 1 (เงื่อนไขที่เป็นไปได้)",tip:"If + ปัจจุบัน, ประธาน + will + กริยาธรรมดา — ห้ามใช้ will ใน if",
+   e:"If "+c.c+", "+c.r+".",t:"ถ้า"+c.ct+" "+c.rt,a:c.cs,d:dis3(["will "+c.cb,c.cb+"ed",c.cb+"ing",c.cb],c.cs),h:["if",c.cb,c.r]};}},
+{id:"g13",lv:3,f:function(){var fr=rp(FRAME3);
+  return{n:fr.n,tip:fr.tip,e:fr.e,t:fr.t,a:fr.a,d:fr.d,h:fr.e.split(" ").filter(function(w,i){return i%2===0;}).slice(0,4)};}}
+];
+function genOne(lv){
+  var pool=GEN.filter(function(g){return lv?g.lv===lv:g.lv<=unlockedLv();});
+  if(!pool.length)pool=GEN;
+  var g=rp(pool),r=g.f();r.id=g.id;r.lv=g.lv;return r;
+}
+function genItem(r){
+  return{en:r.e,th:r.t,s:null,t:r.t,lv:r.lv,un:r.n,key:"g|"+r.id,gen:true,tip:r.tip,h:r.h};
+}
+function rxEsc(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}
+function padDis(ans,d){
+  var extra=[ans+"s",ans+"ed",ans+"ing","to "+ans,"will "+ans,ans+"es"];
+  d=uniq(d.filter(function(x){return x&&x!==ans;}));
+  for(var i=0;i<extra.length&&d.length<3;i++)if(d.indexOf(extra[i])<0&&extra[i]!==ans)d.push(extra[i]);
+  return d.slice(0,3);
+}
+function genQ(r,write){
+  var item=genItem(r);
+  r.d=padDis(r.a,r.d||[]);
+  if(write)return{item:item,mode:"write",answer:r.e,
+    prompt:{type:"write",text:r.t,h:r.h,tip:r.tip,name:r.n}};
+  var holed=r.e.replace(new RegExp("\\b"+rxEsc(r.a)+"\\b"),"___");
+  if(holed===r.e)holed=r.e.replace(r.a,"___");
+  return{item:item,mode:"gblank",answer:r.a,
+    prompt:{type:"gsent",text:holed,th:r.t,tip:r.tip,name:r.n},
+    options:shuffle([r.a].concat(r.d))};
+}
+
+/* ================= 3c. ตัวตรวจไวยากรณ์ของโหมดเขียนประโยค ================= */
+var ART={a:1,an:1,the:1},BE={am:1,is:1,are:1,was:1,were:1,be:1,been:1,being:1},
+    AUX={do:1,does:1,did:1,have:1,has:1,had:1,will:1,would:1,can:1,could:1,should:1,must:1,might:1},
+    PREP={"in":1,"on":1,"at":1,"to":1,"for":1,"with":1,"by":1,"from":1,"of":1,"about":1,"after":1,"before":1,"near":1,"than":1};
+/* กริยาอปกติที่พบบ่อย เพื่อให้คำแนะนำตรงจุดขึ้น */
+var IRREG=[["go","goes","went","gone","going"],["see","sees","saw","seen","seeing"],
+ ["take","takes","took","taken","taking"],["come","comes","came","come","coming"],
+ ["get","gets","got","gotten","getting"],["make","makes","made","made","making"],
+ ["say","says","said","said","saying"],["know","knows","knew","known","knowing"],
+ ["think","thinks","thought","thought","thinking"],["give","gives","gave","given","giving"],
+ ["drink","drinks","drank","drunk","drinking"],["sleep","sleeps","slept","slept","sleeping"],
+ ["understand","understands","understood","understood","understanding"],
+ ["speak","speaks","spoke","spoken","speaking"],["pay","pays","paid","paid","paying"],
+ ["leave","leaves","left","left","leaving"],["bring","brings","brought","brought","bringing"],
+ ["cost","costs","cost","cost","costing"],["keep","keeps","kept","kept","keeping"],
+ ["lose","loses","lost","lost","losing"],["find","finds","found","found","finding"],
+ ["feel","feels","felt","felt","feeling"],["hold","holds","held","held","holding"],
+ ["run","runs","ran","run","running"],["teach","teaches","taught","taught","teaching"]];
+var VFORM={};
+IRREG.forEach(function(r){var v={b:r[0],s:r[1],p:r[2],pp:r[3],g:r[4]};
+  ["b","s","p","pp","g"].forEach(function(k){var w=v[k];
+    if(!VFORM[w])VFORM[w]=[];VFORM[w].push({v:v,k:k});});});
+VERB.forEach(function(v){[["b","b"],["s","s"],["p","p"],["pp","pp"],["g","g"]].forEach(function(k){
+  var w=v[k[0]];if(!VFORM[w])VFORM[w]=[];VFORM[w].push({v:v,k:k[1]});});});
+var FORMTIP={b:"ตรงนี้ต้องใช้กริยารูปธรรมดา (หลัง do/does/did/will/to ไม่ผัน)",
+  s:"ประธานเอกพจน์ (he/she/it) ต้องเติม -s/-es ที่กริยา",
+  p:"ประโยคนี้เป็นอดีต ต้องใช้กริยาช่อง 2",
+  pp:"หลัง have/has/was/were ต้องใช้กริยาช่อง 3",
+  g:"หลัง is/am/are ต้องใช้ V-ing"};
+var CONTR=[["do not","don't"],["does not","doesn't"],["did not","didn't"],["cannot","can't"],["can not","can't"],
+ ["will not","won't"],["is not","isn't"],["are not","aren't"],["was not","wasn't"],["were not","weren't"],
+ ["have not","haven't"],["has not","hasn't"],["i am","i'm"],["i will","i'll"],["i have","i've"],["it is","it's"],
+ ["we will","we'll"],["they will","they'll"],["she will","she'll"],["he will","he'll"],["you will","you'll"],
+ ["we have","we've"],["they have","they've"],["there is","there's"]];
+function norm(s){return String(s).toLowerCase().replace(/[’']/g,"").replace(/[.,!?;:"-]/g," ")
+  .replace(/\s+/g," ").trim();}
+function tok(s){return norm(s).split(" ").filter(Boolean);}
+function variants(t){
+  var n=norm(t),out=[n];
+  CONTR.forEach(function(c){
+    var a=norm(c[0]),b=norm(c[1]); /* norm ตัด ' ออก: do not <-> dont */
+    if(n.indexOf(a)>=0)out.push(n.split(a).join(b));
+    if(n.indexOf(b)>=0)out.push(n.split(b).join(a));});
+  return uniq(out);
+}
+function lev(a,b){
+  var m=a.length,n=b.length,d=[],i,j;
+  for(i=0;i<=m;i++){d[i]=[i];}
+  for(j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return d[m][n];
+}
+function align(u,t){ /* u=ของผู้ใช้ t=เฉลย -> รายการ op */
+  var m=u.length,n=t.length,d=[],i,j;
+  for(i=0;i<=m;i++){d[i]=[];for(j=0;j<=n;j++)d[i][j]=0;}
+  for(i=0;i<=m;i++)d[i][0]=i;
+  for(j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)
+    d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(u[i-1]===t[j-1]?0:1));
+  var ops=[];i=m;j=n;
+  while(i>0||j>0){
+    if(i>0&&j>0&&d[i][j]===d[i-1][j-1]+(u[i-1]===t[j-1]?0:1)){
+      ops.unshift(u[i-1]===t[j-1]?{o:"same",u:u[i-1],t:t[j-1]}:{o:"sub",u:u[i-1],t:t[j-1]});i--;j--;}
+    else if(i>0&&d[i][j]===d[i-1][j]+1){ops.unshift({o:"extra",u:u[i-1]});i--;}
+    else {ops.unshift({o:"miss",t:t[j-1]});j--;}
+  }
+  return ops;
+}
+function sameVerb(a,b){
+  if(!VFORM[a]||!VFORM[b])return null;
+  for(var i=0;i<VFORM[a].length;i++)for(var j=0;j<VFORM[b].length;j++)
+    if(VFORM[a][i].v===VFORM[b][j].v)return VFORM[b][j].k;
+  return null;
+}
+function checkWriting(raw,target,accepted){
+  var u=norm(raw),res={tips:[],types:[],ops:[],answer:target};
+  if(!u){res.verdict="wrong";res.tips.push("ยังไม่ได้พิมพ์คำตอบ");return res;}
+  var acc=variants(target).concat(accepted||[]);
+  if(acc.indexOf(u)>=0){
+    res.verdict="ok";
+    if(!/^[A-Z]/.test(String(raw).trim()))res.tips.push("เนื้อหาถูกหมดแล้ว · ประโยคอังกฤษขึ้นต้นด้วยตัวพิมพ์ใหญ่เสมอ");
+    else if(!/[.?!]$/.test(String(raw).trim()))res.tips.push("เนื้อหาถูกหมดแล้ว · อย่าลืมเครื่องหมายท้ายประโยค");
+    return res;
+  }
+  var ut=tok(u),tt=tok(target);
+  res.ops=align(ut,tt);
+  if(ut.slice().sort().join(" ")===tt.slice().sort().join(" ")){
+    res.verdict="order";res.types.push("order");
+    res.tips.push("คำครบถูกหมดแล้ว แต่ลำดับยังไม่ถูก — ภาษาอังกฤษเรียง ประธาน + กริยา + กรรม + เวลา/สถานที่");
+    return res;
+  }
+  var errs=0;
+  res.ops.forEach(function(op){
+    if(op.o==="same")return;
+    errs++;
+    if(op.o==="sub"){
+      var k=sameVerb(op.u,op.t);
+      if(ART[op.u]&&ART[op.t]){res.types.push("article");
+        res.tips.push(op.t==="the"?"ตรงนี้ใช้ the (สิ่งที่รู้กันว่าหมายถึงอันไหน) ไม่ใช่ "+op.u
+          :"ใช้ “"+op.t+"” — an ใช้หน้าคำที่ขึ้นต้นด้วยเสียงสระ (a, e, i, o, u) นอกนั้นใช้ a");}
+      else if(k){res.types.push("verbform");res.tips.push("“"+op.u+"” → “"+op.t+"” : "+FORMTIP[k]);}
+      else if(BE[op.u]&&BE[op.t]){res.types.push("be");
+        res.tips.push("“"+op.u+"” → “"+op.t+"” : is/am/are ต้องตรงกับประธาน และอดีตใช้ was/were");}
+      else if(AUX[op.u]&&AUX[op.t]){res.types.push("aux");
+        res.tips.push("กริยาช่วยควรเป็น “"+op.t+"” ไม่ใช่ “"+op.u+"”");}
+      else if(PREP[op.u]&&PREP[op.t]){res.types.push("prep");
+        res.tips.push("บุพบทควรเป็น “"+op.t+"” — in ใช้กับเดือน/ปี/ในสถานที่ · on ใช้กับวัน/พื้นผิว · at ใช้กับเวลาและจุดที่เจาะจง");}
+      else if(op.u+"s"===op.t||op.u+"es"===op.t){res.types.push("plural");
+        res.tips.push("ต้องเติม s เป็น “"+op.t+"” (ประธานเอกพจน์ he/she/it หรือคำนามพหูพจน์)");}
+      else if(op.t+"s"===op.u||op.t+"es"===op.u){res.types.push("plural");
+        res.tips.push("ตรงนี้ไม่ต้องเติม s : ใช้ “"+op.t+"”");}
+      else if(op.u+"ed"===op.t||op.u+"d"===op.t){res.types.push("verbform");
+        res.tips.push("ประโยคนี้เป็นอดีต ต้องผันเป็น “"+op.t+"”");}
+      else if(op.t+"ed"===op.u||op.t+"d"===op.u){res.types.push("verbform");
+        res.tips.push("ตรงนี้ไม่ต้องผันอดีต ใช้ “"+op.t+"”");}
+      else if(op.u+"ing"===op.t){res.types.push("verbform");
+        res.tips.push("หลัง is/am/are ต้องใช้ V-ing : “"+op.t+"”");}
+      else if(op.t+"ing"===op.u){res.types.push("verbform");
+        res.tips.push("ตรงนี้ไม่ใช้ V-ing ใช้ “"+op.t+"”");}
+      else if(lev(op.u,op.t)<=2){res.types.push("spelling");
+        res.tips.push("สะกดผิดเล็กน้อย: “"+op.u+"” → “"+op.t+"”");}
+      else{res.types.push("word");res.tips.push("ตรงนี้ควรใช้ “"+op.t+"” แทน “"+op.u+"”");}
+    }else if(op.o==="miss"){
+      if(ART[op.t]){res.types.push("article");res.tips.push("ขาด article “"+op.t+"” หน้าคำนาม");}
+      else if(BE[op.t]){res.types.push("be");res.tips.push("ขาดกริยา be “"+op.t+"” — ประโยคอังกฤษต้องมีกริยาเสมอ");}
+      else if(AUX[op.t]){res.types.push("aux");res.tips.push("ขาดกริยาช่วย “"+op.t+"”");}
+      else if(PREP[op.t]){res.types.push("prep");res.tips.push("ขาดบุพบท “"+op.t+"”");}
+      else{res.types.push("missing");res.tips.push("ขาดคำว่า “"+op.t+"”");}
+    }else{res.types.push("extra");res.tips.push("มีคำเกินมา: “"+op.u+"”");}
+  });
+  res.verdict=errs<=1?"close":"wrong";
+  if(res.tips.length>3)res.tips=res.tips.slice(0,3).concat(["(ดูประโยคเฉลยด้านบนประกอบ)"]);
+  return res;
+}
+var ERRTH={article:"a / an / the",verbform:"รูปกริยา (ช่อง 1-2-3, -ing)",be:"กริยา be (is/am/are/was)",
+  aux:"กริยาช่วย (do/does/did/will)",prep:"บุพบท (in/on/at)",plural:"การเติม s",
+  spelling:"การสะกดคำ",order:"ลำดับคำในประโยค",missing:"คำที่หายไป",extra:"คำที่เกินมา",word:"เลือกคำผิด"};
+
+/* ============ 3d. ผู้ช่วย AI — ต่อกับ Claude API ผ่านพร็อกซีของคุณเอง ============
+   โหมด proxy : หน้าเว็บยิงไปที่ URL ของคุณ แล้วเซิร์ฟเวอร์ถือ API key ไว้ (แนะนำ)
+   โหมด key   : หน้าเว็บยิงไป api.anthropic.com ตรง ๆ ด้วยคีย์ที่เก็บในเครื่องนี้
+                (ใช้กับเครื่องส่วนตัวเท่านั้น เพราะคีย์จะอยู่ในเบราว์เซอร์)            */
+var AIKEY="engplay_ai";
+var AICFG={mode:"none",url:"",pass:"",key:"",quick:"claude-haiku-5-5",deep:"claude-sonnet-5-5"};
+try{var _ac=localStorage.getItem(AIKEY);if(_ac){var _o=JSON.parse(_ac);for(var _k in _o)AICFG[_k]=_o[_k];}}catch(e){}
+function aiSave(){try{localStorage.setItem(AIKEY,JSON.stringify(AICFG));}catch(e){}}
+var AI={st:"off",cool:0,last:""};
+function aiSync(){
+  AI.st=((AICFG.mode==="proxy"&&AICFG.url)||(AICFG.mode==="key"&&AICFG.key))?"on":"off";
+}
+aiSync();
+function aiReady(){return AI.st==="on"&&S.ai!==false&&Date.now()>AI.cool;}
+
+function aiCall(prompt,tier,noGuard){
+  if(!noGuard&&!aiReady())return Promise.resolve(null);
+  var body={model:(tier==="default"?AICFG.deep:AICFG.quick),
+    max_tokens:(tier==="default"?800:400),
+    messages:[{role:"user",content:prompt}]};
+  var url,hd={"content-type":"application/json"};
+  if(AICFG.mode==="key"){
+    url="https://api.anthropic.com/v1/messages";
+    hd["x-api-key"]=AICFG.key;
+    hd["anthropic-version"]="2023-06-01";
+    hd["anthropic-dangerous-direct-browser-access"]="true";
+  }else{
+    url=AICFG.url;
+    if(AICFG.pass)hd["x-app-key"]=AICFG.pass;
+  }
+  return fetch(url,{method:"POST",headers:hd,body:JSON.stringify(body)}).then(function(r){
+    if(!r.ok){
+      if(r.status===401||r.status===403){AI.last="กุญแจหรือรหัสผ่านไม่ถูกต้อง ("+r.status+")";AI.cool=Date.now()+60000;}
+      else if(r.status===429){AI.last="ใช้งานถี่เกินไป ลองใหม่ในอีกสักครู่";AI.cool=Date.now()+90000;}
+      else {AI.last="เซิร์ฟเวอร์ตอบกลับรหัส "+r.status;AI.cool=Date.now()+20000;}
+      return null;
+    }
+    AI.last="";
+    return r.json();
+  }).then(function(j){
+    if(!j)return null;
+    if(typeof j.text==="string")return j.text;                              /* พร็อกซีแบบง่าย */
+    if(j.content&&j.content[0]&&j.content[0].text)return j.content[0].text; /* รูปแบบของ Claude API */
+    if(j.error){AI.last=String(j.error.message||j.error).slice(0,120);return null;}
+    return null;
+  }).catch(function(){AI.last="ต่อเซิร์ฟเวอร์ไม่ได้ ตรวจ URL และอินเทอร์เน็ต";AI.cool=Date.now()+30000;return null;});
+}
+function aiJSON(prompt,tier){
+  return aiCall(prompt,tier).then(function(t){
+    if(!t)return null;
+    var m=String(t).match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    try{return m?JSON.parse(m[0]):null;}catch(e){return null;}
+  });
+}
+function aiText(prompt,onText,tier){
+  return aiCall(prompt,tier).then(function(t){if(t&&onText)onText({text:t});return t;});
+}
+function aiTest(el){
+  el.textContent="กำลังทดสอบการเชื่อมต่อ...";
+  var save=AI.cool;AI.cool=0;
+  return aiCall("ตอบกลับคำว่า OK เพียงคำเดียว",null,true).then(function(t){
+    if(t){AI.last="";aiSync();el.innerHTML='<span style="color:var(--ok)">✓ เชื่อมต่อสำเร็จ — โมเดลตอบว่า: '+
+      esc(String(t).slice(0,40))+'</span><br>กดบันทึกเพื่อเริ่มใช้งาน';}
+    else{AI.cool=save;el.innerHTML='<span style="color:var(--bad)">✕ ไม่สำเร็จ: '+esc(AI.last||"ไม่ทราบสาเหตุ")+'</span>';}
+  });
+}
+var AIROLE="คุณคือครูสอนภาษาอังกฤษให้ผู้เรียนชาวไทย อธิบายเป็นภาษาไทยสั้น กระชับ เป็นกันเอง ห้ามใช้ศัพท์เทคนิคโดยไม่แปล";
+
+/* ตรวจประโยคที่ผู้เรียนเขียน แบบเข้าใจความหมาย (ใช้เสริมระบบกฎ) */
+function aiCheckSentence(thai,model,user){
+  return aiJSON(AIROLE+"\n\nความหมายภาษาไทยที่ต้องการสื่อ: "+thai+
+    "\nประโยคเฉลยของระบบ: "+model+
+    "\nประโยคที่ผู้เรียนเขียน: "+user+
+    "\n\nตัดสินว่าประโยคของผู้เรียนถูกไวยากรณ์และสื่อความหมายตรงกับภาษาไทยหรือไม่ "+
+    "ถ้าถูกแม้จะใช้คำไม่เหมือนเฉลยให้ถือว่าถูก\n"+
+    'ตอบเป็น JSON เท่านั้น: {"ok":true/false,"th":"คำอธิบายภาษาไทย 1-2 ประโยค บอกว่าผิดตรงไหนเพราะอะไร หรือชมสั้น ๆ ถ้าถูก","better":"ประโยคอังกฤษที่เป็นธรรมชาติที่สุด"}',
+    "quick");
+}
+
+/* ----------------------------- 4. หน้าจอหลัก ---------------------------- */
+var view="home",CFGOPEN=false;
+function go(v){view=v;
+  var fb=document.getElementById("fb");if(fb)fb.classList.remove("show");
+  var bs=document.querySelectorAll("#nav button");
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle("on",bs[i].dataset.go===v);
+  $("#nav").classList.toggle("hide",v==="quiz");
+  render();
+}
+document.querySelectorAll("#nav button").forEach(function(b){
+  b.onclick=function(){go(b.dataset.go);};});
+
+function render(){
+  var a=$("#app");a.className="fade";
+  if(view==="home")a.innerHTML=homeHTML();
+  else if(view==="stats")a.innerHTML=statsHTML();
+  else if(view==="words")a.innerHTML=wordsHTML();
+  else if(view==="chat")a.innerHTML=chatHTML();
+  else if(view==="quiz")a.innerHTML="";
+  if(view==="chat")chatBind();else bind();
+  if(view==="home")bindAccount();
+  window.scrollTo(0,0);
+}
+
+function homeHTML(){
+  var un=unlockedLv();
+  var acc=S.ans?Math.round(S.cor/S.ans*100):0;
+  var mTot=0;ALL.forEach(function(i){if(mastered(i.key))mTot++;});
+  var h='<div class="hero"><div class="logo">E</div><div><h1 style="font-size:19px">EngPlay</h1>'+
+    '<div class="sm dim">ฝึกอังกฤษวันละ 5 นาที · 3 ระดับ</div></div></div>';
+  h+=accountHTML();
+
+  h+='<div class="stats3">'+
+    '<div class="stat"><b>'+S.xp+'</b><span class="xs dim">XP รวม</span></div>'+
+    '<div class="stat"><b>'+S.streak+' วัน</b><span class="xs dim">ต่อเนื่อง</span></div>'+
+    '<div class="stat"><b>'+acc+'%</b><span class="xs dim">ความแม่น</span></div></div>';
+
+  if(!S.placed){
+    h+='<div class="card" style="border-color:var(--brand);margin-bottom:12px">'+
+      '<div class="row"><div style="flex:1"><b>ยังไม่รู้ว่าควรเริ่มระดับไหน?</b>'+
+      '<div class="sm dim" style="margin-top:3px">ทำแบบวัดระดับ 12 ข้อ (ประมาณ 2 นาที) แล้วระบบจะปลดระดับที่เหมาะกับคุณ</div></div></div>'+
+      '<button class="btn sm2" id="goPlace" style="margin-top:12px">เริ่มแบบวัดระดับ</button></div>';
+  }
+
+  var dueAll=dueCount(0);
+  h+='<button class="btn" id="goMix" style="margin-bottom:4px">'+
+     (dueAll>0?('ทบทวนคำที่ถึงกำหนด · '+dueAll+' คำ'):'เล่นแบบสุ่ม 10 ข้อ')+'</button>'+
+     '<div class="xs dim" style="text-align:center;margin:8px 0 12px">ระบบเลือกคำที่คุณกำลังจะลืมให้ก่อนเสมอ</div>';
+
+  /* ชุดประจำวัน + โหมดไม่รู้จบ */
+  var dDone=S.daily===today();
+  h+='<div class="card" style="border-color:'+(dDone?"var(--line)":"var(--brand)")+';margin-bottom:10px">'+
+    '<div class="row"><div style="flex:1"><b>'+(dDone?"✓ ทำชุดประจำวันแล้ว":"ชุดประจำวัน")+'</b>'+
+    '<div class="sm dim" style="margin-top:3px">โจทย์ 10 ข้อที่สร้างใหม่ทุกวัน ผสมคำศัพท์กับไวยากรณ์ · '+
+    new Date().toLocaleDateString("th-TH",{day:"numeric",month:"short"})+'</div></div></div>'+
+    '<button class="btn '+(dDone?"ghost ":"")+'sm2" id="goDaily" style="margin-top:12px">'+
+    (dDone?"ทำซ้ำอีกครั้ง":"เริ่มชุดวันนี้")+'</button></div>';
+
+  h+='<div class="grid2" style="margin-bottom:14px">'+
+    '<button class="btn ghost sm2" id="goGen" style="flex-direction:column;gap:2px;min-height:68px">'+
+    '<span>ไวยากรณ์ไม่รู้จบ</span><span class="xs dim">สร้างประโยคใหม่ทุกข้อ</span></button>'+
+    '<button class="btn ghost sm2" id="goWrite" style="flex-direction:column;gap:2px;min-height:68px">'+
+    '<span>เขียนประโยคเอง</span><span class="xs dim">ตรวจไวยากรณ์ให้</span></button></div>';
+
+  if(AI.st==="on"&&S.ai!==false){
+    h+='<div class="card" style="margin-bottom:14px;border-color:var(--brand2)">'+
+      '<div class="row"><div style="flex:1"><b>🤖 ผู้ช่วย AI เปิดอยู่</b>'+
+      '<div class="sm dim" style="margin-top:3px">'+
+      (AICFG.mode==="proxy"?"ผ่านเซิร์ฟเวอร์ของคุณเอง":"ยิงตรงด้วย API key ในเครื่องนี้")+
+      ' · ช่วยตรวจประโยคที่เขียนเอง อธิบายเพิ่มเป็นภาษาไทย คุยโต้ตอบ และสร้างบทเรียนใหม่</div></div>'+
+      '<button class="pill" id="aiCfgBtn">ตั้งค่า</button></div>'+
+      '<div class="grid2" style="margin-top:12px">'+
+      '<button class="btn sm2" id="goChat">คุยกับโค้ช</button>'+
+      '<button class="btn ghost sm2" id="aiToggle">ปิดชั่วคราว</button></div>'+
+      '<div style="margin-top:12px"><div class="sm" style="font-weight:600">สร้างบทเรียนใหม่ตามหัวข้อที่อยากได้</div>'+
+      '<div class="row" style="gap:8px;margin-top:8px">'+
+      '<input id="lsTopic" type="text" placeholder="เช่น สั่งอาหาร, ประชุมงาน, ฟิตเนส" '+
+      'style="flex:1;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
+      'color:var(--txt);font-size:15px;outline:none">'+
+      '<select id="lsLv" style="background:var(--card2);border:1px solid var(--line);border-radius:12px;'+
+      'padding:12px 8px;color:var(--txt);font-size:14px;outline:none">'+
+      '<option value="1">ระดับ 1</option><option value="2">ระดับ 2</option><option value="3">ระดับ 3</option></select>'+
+      '</div><button class="btn ghost sm2" id="lsGo" style="margin-top:8px">สร้างบทใหม่เข้าคลังของฉัน</button>'+
+      '<div id="lsMsg" class="xs dim" style="margin-top:8px"></div></div></div>';
+  }else{
+    h+='<div class="card" style="margin-bottom:14px">'+
+      '<div class="row"><div style="flex:1"><b>เปิดใช้ผู้ช่วย AI (ไม่บังคับ)</b>'+
+      '<div class="sm dim" style="margin-top:3px">ตรวจประโยคที่เขียนเองแบบเข้าใจความหมาย อธิบายเป็นไทย '+
+      'โค้ชสนทนา และสร้างบทเรียนใหม่ · ทุกโหมดอื่นเล่นได้ครบโดยไม่ต้องเปิด</div></div></div>'+
+      (AI.last?'<div class="xs" style="color:var(--warn);margin-top:8px">'+esc(AI.last)+'</div>':'')+
+      '<button class="btn sm2" id="aiCfgBtn" style="margin-top:12px">ตั้งค่าการเชื่อมต่อ</button></div>';
+  }
+
+  if(CFGOPEN){
+    var pr=AICFG.mode!=="key";
+    h+='<div class="card" style="margin-bottom:14px;border-color:var(--brand)"><b>ตั้งค่าการเชื่อมต่อ AI</b>'+
+      '<div class="sm dim" style="margin:6px 0 12px">เลือกวิธีที่หน้าเว็บนี้จะคุยกับโมเดล</div>'+
+      '<select id="cfgMode" style="width:100%;background:var(--card2);border:1px solid var(--line);'+
+      'border-radius:12px;padding:13px;color:var(--txt);font-size:15px;outline:none">'+
+      '<option value="proxy"'+(AICFG.mode==="proxy"?" selected":"")+'>ผ่านเซิร์ฟเวอร์ของฉัน (แนะนำ)</option>'+
+      '<option value="key"'+(AICFG.mode==="key"?" selected":"")+'>ใส่ API key ตรง ๆ (เครื่องส่วนตัวเท่านั้น)</option>'+
+      '<option value="none"'+(AICFG.mode==="none"?" selected":"")+'>ไม่ใช้ AI</option></select>';
+    if(pr){
+      h+='<div class="xs dim" style="margin:12px 0 5px">URL ของพร็อกซี เช่น https://engplay-ai.ชื่อคุณ.workers.dev</div>'+
+        '<input id="cfgUrl" type="url" placeholder="https://..." value="'+esc(AICFG.url)+'" '+
+        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
+        'color:var(--txt);font-size:15px;outline:none">'+
+        '<div class="xs dim" style="margin:10px 0 5px">รหัสผ่านของพร็อกซี (ถ้าตั้งไว้)</div>'+
+        '<input id="cfgPass" type="password" placeholder="เว้นว่างได้" value="'+esc(AICFG.pass)+'" '+
+        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
+        'color:var(--txt);font-size:15px;outline:none">';
+    }else{
+      h+='<div class="xs dim" style="margin:12px 0 5px">Anthropic API key (sk-ant-...)</div>'+
+        '<input id="cfgKey" type="password" placeholder="sk-ant-..." value="'+esc(AICFG.key)+'" '+
+        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
+        'color:var(--txt);font-size:15px;outline:none">'+
+        '<div class="xs" style="margin-top:8px;color:var(--warn)">⚠ คีย์จะถูกเก็บในเบราว์เซอร์เครื่องนี้และแนบไปกับทุกคำขอ '+
+        'ห้ามใช้โหมดนี้กับเว็บที่แชร์ให้คนอื่น ให้ใช้พร็อกซีแทน</div>';
+    }
+    h+='<div class="grid2" style="margin-top:10px">'+
+      '<div><div class="xs dim" style="margin-bottom:5px">โมเดลสำหรับงานเร็ว</div>'+
+      '<input id="cfgQuick" value="'+esc(AICFG.quick)+'" style="width:100%;background:var(--card2);'+
+      'border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--txt);font-size:13px;outline:none"></div>'+
+      '<div><div class="xs dim" style="margin-bottom:5px">โมเดลสำหรับงานยาว</div>'+
+      '<input id="cfgDeep" value="'+esc(AICFG.deep)+'" style="width:100%;background:var(--card2);'+
+      'border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--txt);font-size:13px;outline:none"></div></div>'+
+      '<div class="grid2" style="margin-top:12px">'+
+      '<button class="btn sm2" id="cfgSave">บันทึก</button>'+
+      '<button class="btn ghost sm2" id="cfgTest">ทดสอบการเชื่อมต่อ</button></div>'+
+      '<div id="cfgMsg" class="xs dim" style="margin-top:10px"></div>'+
+      '<div class="xs dim" style="margin-top:10px">วิธีตั้งพร็อกซีอยู่ในไฟล์ README.md ที่มากับแอป '+
+      '(วางบน Cloudflare Workers ฟรีได้ใน 5 นาที)</div></div>';
+  }
+
+  var nCust=(S.cust||[]).length;
+  if(nCust)h+='<div class="xs dim" style="text-align:center;margin:-4px 0 12px">'+
+    'บทที่ AI สร้างให้ '+nCust+' บท ถูกเพิ่มเข้าไปในระดับด้านล่างแล้ว</div>';
+
+  var gp=genProgress();
+  if(gp.seen)h+='<div class="card" style="margin-bottom:14px"><b>แบบไวยากรณ์ที่ฝึกแล้ว</b>'+
+    '<div class="sm dim" style="margin:3px 0 10px">'+gp.seen+'/'+GEN.length+' รูปแบบ · แม่นแล้ว '+gp.m+' รูปแบบ</div>'+
+    '<div class="bar"><i style="width:'+Math.round(gp.m/GEN.length*100)+'%"></i></div></div>';
+
+  BANK.forEach(function(L){
+    var p=lvProgress(L.lv),lock=L.lv>un;
+    h+='<div class="lv'+(lock?' locked':'')+'">'+
+      '<div class="tag">'+(lock?'🔒 ล็อก':(p.pct>=100?'✓ ครบ':p.m+'/'+p.total+' คำ'))+'</div>'+
+      '<div class="row" style="align-items:flex-start"><div style="flex:1">'+
+      '<h3>'+L.name+'</h3><div class="sm dim">'+L.sub+'</div></div>'+ringSVG(p.pct)+'</div>'+
+      '<div class="bar" style="margin-top:12px"><i style="width:'+p.pct+'%"></i></div>';
+    if(lock){
+      h+='<div class="xs dim" style="margin-top:10px">ปลดล็อกเมื่อเรียนระดับ '+(L.lv-1)+' ได้ 50% หรือผ่านแบบวัดระดับ</div>';
+    }else{
+      h+='<div class="units">';
+      L.units.forEach(function(U,ui){
+        var up=unitProgress(L.lv,ui);
+        h+='<button class="unit" data-lv="'+L.lv+'" data-ui="'+ui+'">'+
+          '<div class="ub"><div>'+esc(U.name)+'</div>'+
+          '<div class="xs dim">'+up.m+'/'+up.total+' คำที่จำได้แล้ว</div></div>'+
+          ringSVG(up.pct)+'</button>';
+      });
+      h+='<button class="btn ghost sm2" data-lv="'+L.lv+'" data-ui="-1" style="margin-top:3px">'+
+        'รวมทุกบทของระดับนี้ · 10 ข้อ</button></div>';
+    }
+    h+='</div>';
+  });
+  h+='<div class="xs dim" style="text-align:center;margin:18px 0 4px">คำศัพท์และสำนวนทั้งหมด '+ALL.length+
+     ' รายการ · จำได้แล้ว '+mTot+' · ข้อมูลการเรียนเก็บไว้ในเบราว์เซอร์เครื่องนี้เท่านั้น</div>';
+  return h;
+}
+
+function statsHTML(){
+  var acc=S.ans?Math.round(S.cor/S.ans*100):0;
+  var h='<h1 style="font-size:19px;margin:6px 2px 4px">ผลลัพธ์การเรียน</h1>'+
+    '<div class="sm dim" style="margin:0 2px 14px">ตัวเลขทั้งหมดมาจากการเล่นจริงของคุณ</div>';
+  h+='<div class="mini">'+
+    '<div class="stat"><b>'+S.ans+'</b><span class="xs dim">ข้อที่ตอบทั้งหมด</span></div>'+
+    '<div class="stat"><b>'+acc+'%</b><span class="xs dim">ตอบถูกเฉลี่ย</span></div>'+
+    '<div class="stat"><b>'+S.sessions+'</b><span class="xs dim">รอบที่เล่นจบ</span></div>'+
+    '<div class="stat"><b>'+S.best+' วัน</b><span class="xs dim">สถิติต่อเนื่อง</span></div></div>';
+
+  /* กราฟ 7 วัน */
+  var days=[],max=1,names=["อา","จ","อ","พ","พฤ","ศ","ส"];
+  for(var i=6;i>=0;i--){var k=dayKey(i),v=S.days[k]||0;if(v>max)max=v;
+    var d=new Date();d.setDate(d.getDate()-i);days.push({v:v,n:names[d.getDay()]});}
+  h+='<div class="card" style="margin-top:14px"><b>7 วันล่าสุด</b>'+
+    '<div class="xs dim">จำนวนข้อที่ตอบต่อวัน</div><div class="chart">';
+  days.forEach(function(d){h+='<div><span class="xs dim">'+(d.v||"")+'</span>'+
+    '<i style="height:'+Math.round(d.v/max*76)+'%"></i><span class="xs dim">'+d.n+'</span></div>';});
+  h+='</div></div>';
+
+  /* ความคืบหน้าแต่ละระดับ */
+  h+='<div class="card" style="margin-top:12px"><b>ความคืบหน้าแต่ละระดับ</b>';
+  BANK.forEach(function(L){var p=lvProgress(L.lv);
+    h+='<div style="margin-top:12px"><div class="row sm"><span>'+L.name+'</span><span class="sp"></span>'+
+      '<span class="dim">'+p.m+'/'+p.total+'</span></div>'+
+      '<div class="bar" style="margin-top:6px"><i style="width:'+p.pct+'%"></i></div></div>';});
+  h+='<div class="xs dim" style="margin-top:12px">นับว่า “จำได้แล้ว” เมื่อตอบคำนั้นถูกติดกัน 3 ครั้งในรูปแบบต่างกัน</div></div>';
+
+  /* ความแม่นตามรูปแบบคำถาม */
+  var MN={mc1:"อังกฤษ → ไทย",mc2:"ไทย → อังกฤษ",listen:"ฟังเสียง",blank:"เติมประโยค",order:"เรียงประโยค",
+    gblank:"เลือกรูปไวยากรณ์",write:"เขียนประโยคเอง",chat:"สนทนากับโค้ช AI"};
+  var any=false;for(var k in MN)if(S.modes[k])any=true;
+  if(any){
+    h+='<div class="card" style="margin-top:12px"><b>จุดแข็ง / จุดอ่อน ตามรูปแบบ</b>';
+    for(var m in MN){var st2=S.modes[m];if(!st2)continue;
+      var p=Math.round(st2.c/st2.t*100);
+      h+='<div style="margin-top:11px"><div class="row sm"><span>'+MN[m]+'</span><span class="sp"></span>'+
+        '<span class="dim">'+p+'% ('+st2.t+' ข้อ)</span></div>'+
+        '<div class="bar" style="margin-top:6px"><i style="width:'+p+'%;background:'+
+        (p>=80?"var(--ok)":p>=60?"var(--brand)":"var(--warn)")+'"></i></div></div>';}
+    h+='</div>';
+  }
+
+  /* ไวยากรณ์: จุดที่ผิดบ่อย + รูปแบบที่ฝึกแล้ว */
+  var ge=[];for(var t in S.gerr)ge.push([t,S.gerr[t]]);
+  ge.sort(function(a,b){return b[1]-a[1];});
+  if(ge.length){
+    var gmax=ge[0][1];
+    h+='<div class="card" style="margin-top:12px"><b>จุดที่ผิดบ่อยในโหมดเขียนประโยค</b>'+
+      '<div class="xs dim" style="margin:3px 0 4px">นับจากคำที่ระบบตรวจเจอว่าผิด</div>';
+    ge.slice(0,6).forEach(function(e){
+      h+='<div style="margin-top:10px"><div class="row sm"><span>'+(ERRTH[e[0]]||e[0])+'</span>'+
+        '<span class="sp"></span><span class="dim">'+e[1]+' ครั้ง</span></div>'+
+        '<div class="bar" style="margin-top:6px"><i style="width:'+Math.round(e[1]/gmax*100)+
+        '%;background:var(--warn)"></i></div></div>';});
+    h+='<div class="xs dim" style="margin-top:12px">ความแม่นในโหมดเขียน: '+
+      (S.wr.t?Math.round(S.wr.c/S.wr.t*100):0)+'% จาก '+S.wr.t+' ประโยค</div></div>';
+  }
+  var gseen=GEN.filter(function(g){return S.items["g|"+g.id];});
+  if(gseen.length){
+    h+='<div class="card" style="margin-top:12px"><b>รูปแบบไวยากรณ์ที่ฝึกแล้ว</b><div style="margin-top:4px">';
+    gseen.forEach(function(g){var x=S.items["g|"+g.id],nm=g.f().n,p=Math.round(x.b/5*100);
+      h+='<div class="listrow"><div style="flex:1;min-width:0"><b style="font-size:14.5px">'+esc(nm)+'</b>'+
+        '<div class="xs dim">ถูก '+x.c+' · ผิด '+x.w+'</div></div>'+
+        '<span class="pill" style="color:'+(x.b>=4?"var(--ok)":x.b>=2?"var(--brand)":"var(--warn)")+'">'+p+'%</span></div>';});
+    h+='</div></div>';
+  }
+
+  /* คำที่ควรทบทวน */
+  var weak=ALL.filter(function(i){var x=S.items[i.key];return x&&x.w>0;})
+    .sort(function(a,b){return (S.items[b.key].w-S.items[b.key].c)-(S.items[a.key].w-S.items[a.key].c);}).slice(0,8);
+  if(weak.length){
+    h+='<div class="card" style="margin-top:12px"><b>คำที่พลาดบ่อยที่สุด</b><div style="margin-top:6px">';
+    weak.forEach(function(i){var x=S.items[i.key];
+      h+='<div class="listrow"><div style="flex:1;min-width:0"><b>'+esc(i.en)+'</b>'+
+        '<div class="xs dim">'+esc(i.th)+'</div></div>'+
+        '<span class="pill">ผิด '+x.w+' · ถูก '+x.c+'</span></div>';});
+    h+='</div><button class="btn sm2" id="goWeak" style="margin-top:12px">ฝึกคำกลุ่มนี้ 10 ข้อ</button></div>';
+  }
+  h+='<button class="btn ghost sm2" id="reset" style="margin-top:14px">ล้างข้อมูลการเรียนทั้งหมด</button>';
+  return h;
+}
+
+function wordsHTML(){
+  var h='<h1 style="font-size:19px;margin:6px 2px 4px">คลังคำศัพท์</h1>'+
+    '<div class="sm dim" style="margin:0 2px 12px">กดที่คำเพื่อฟังเสียง · '+ALL.length+' รายการ</div>';
+  BANK.forEach(function(L){
+    h+='<div class="card" style="margin-bottom:12px"><b>'+L.name+'</b>';
+    L.units.forEach(function(U,ui){
+      h+='<div style="margin-top:12px"><div class="sm" style="font-weight:700;color:var(--brand)">'+esc(U.name)+'</div>'+
+        '<div class="xs dim" style="margin:3px 0 4px">💡 '+esc(U.tip)+'</div>';
+      U.items.forEach(function(it){
+        var x=S.items[L.lv+"|"+it.en];
+        var badge=!x?'<span class="pill">ยังไม่เรียน</span>':
+          x.b>=5?'<span class="pill" style="color:var(--ok)">แม่นแล้ว</span>':
+          x.b>=3?'<span class="pill" style="color:var(--ok)">จำได้</span>':
+          '<span class="pill" style="color:var(--warn)">กำลังเรียน</span>';
+        h+='<button class="listrow" data-say="'+esc(it.en)+'" style="width:100%;text-align:left">'+
+          '<div style="flex:1;min-width:0"><b>'+esc(it.en)+'</b><div class="xs dim">'+esc(it.th)+'</div></div>'+
+          badge+'</button>';
+      });
+      h+='</div>';
+    });
+    h+='</div>';
+  });
+  return h;
+}
+
+function bind(){
+  var g=$("#goMix");if(g)g.onclick=function(){start({lv:0,ui:-1});};
+  var p=$("#goPlace");if(p)p.onclick=startPlacement;
+  var gd=$("#goDaily");if(gd)gd.onclick=startDaily;
+  var gg=$("#goGen");if(gg)gg.onclick=function(){startGen(false);};
+  var gw=$("#goWrite");if(gw)gw.onclick=function(){startGen(true);};
+  var gc=$("#goChat");if(gc)gc.onclick=function(){go("chat");};
+  var at=$("#aiToggle");if(at)at.onclick=function(){S.ai=(S.ai===false);save();
+    toast(S.ai?"เปิดผู้ช่วย AI แล้ว":"ปิดผู้ช่วย AI ชั่วคราวแล้ว");render();};
+  var cb=$("#aiCfgBtn");if(cb)cb.onclick=function(){
+    CFGOPEN=!CFGOPEN;if(CFGOPEN&&AICFG.mode==="none")AICFG.mode="proxy";render();};
+  var cm=$("#cfgMode");if(cm)cm.onchange=function(){AICFG.mode=cm.value;render();};
+  var cs=$("#cfgSave");if(cs)cs.onclick=function(){
+    var u=$("#cfgUrl"),p=$("#cfgPass"),k=$("#cfgKey"),q=$("#cfgQuick"),d=$("#cfgDeep");
+    if(u)AICFG.url=u.value.trim();
+    if(p)AICFG.pass=p.value.trim();
+    if(k)AICFG.key=k.value.trim();
+    if(q&&q.value.trim())AICFG.quick=q.value.trim();
+    if(d&&d.value.trim())AICFG.deep=d.value.trim();
+    AI.cool=0;AI.last="";aiSave();aiSync();S.ai=true;save();
+    toast(AI.st==="on"?"บันทึกแล้ว · AI พร้อมใช้งาน":"บันทึกแล้ว");
+    CFGOPEN=(AI.st!=="on");render();};
+  var ct=$("#cfgTest");if(ct)ct.onclick=function(){
+    var u=$("#cfgUrl"),p=$("#cfgPass"),k=$("#cfgKey");
+    if(u)AICFG.url=u.value.trim();
+    if(p)AICFG.pass=p.value.trim();
+    if(k)AICFG.key=k.value.trim();
+    aiSave();aiTest($("#cfgMsg"));};
+  var lg=$("#lsGo");
+  if(lg)lg.onclick=function(){
+    if(lg.disabled)return;lg.disabled=true;lg.style.opacity=.5;
+    aiMakeLesson($("#lsTopic").value.trim(),+$("#lsLv").value,$("#lsMsg")).then(function(){
+      var b=$("#lsGo");if(b){b.disabled=false;b.style.opacity=1;}});
+  };
+  var w=$("#goWeak");if(w)w.onclick=function(){start({weak:true});};
+  var r=$("#reset");if(r)r.onclick=function(){
+    ask("ล้างความคืบหน้า XP สถิติ และบทที่ AI สร้างทั้งหมด? ย้อนกลับไม่ได้",function(){
+      S=fresh();save();applyCustom();toast("ล้างข้อมูลแล้ว");go("home");},"ล้างข้อมูล");};
+  document.querySelectorAll("[data-lv]").forEach(function(b){
+    b.onclick=function(){start({lv:+b.dataset.lv,ui:+b.dataset.ui});};});
+  document.querySelectorAll("[data-say]").forEach(function(b){
+    b.onclick=function(){speak(b.dataset.say);};});
+}
+
+/* ------------------------------ 5. ตัวเกม ------------------------------- */
+var Q=null;
+var IV=[1,4,10,25,60,9999]; /* ช่วงทบทวนตามกล่อง Leitner */
+
+function buildMode(item,box,isPlacement){
+  var pool;
+  if(isPlacement)pool=["mc1","blank"];
+  else if(box===0)pool=["mc1","mc1","listen"];
+  else if(box===1)pool=["mc2","blank","listen"];
+  else if(box===2)pool=["mc2","blank","order"];
+  else if(box===3)pool=["blank","order","mc2"];
+  else pool=["write","blank","order"];
+  if(!item.s)pool=pool.filter(function(m){return m!=="blank"&&m!=="order";});
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+function makeQ(item,mode){
+  var sameLv=allItems(item.lv);
+  var others=sameLv.filter(function(i){return i.en!==item.en;});
+  var q={item:item,mode:mode};
+  if(mode==="mc1"){
+    q.prompt={type:"word",text:item.en};
+    q.options=shuffle([item.th].concat(pick(others,3).map(function(i){return i.th;})));
+    q.answer=item.th;
+  }else if(mode==="mc2"){
+    q.prompt={type:"th",text:item.th};
+    q.options=shuffle([item.en].concat(pick(others,3).map(function(i){return i.en;})));
+    q.answer=item.en;
+  }else if(mode==="listen"){
+    q.prompt={type:"listen",text:item.en};
+    q.options=shuffle([item.en].concat(pick(others,3).map(function(i){return i.en;})));
+    q.answer=item.en;
+  }else if(mode==="blank"){
+    q.prompt={type:"sent",text:item.s,th:item.t};
+    q.options=shuffle([item.en].concat(pick(others,3).map(function(i){return i.en;})));
+    q.answer=item.en;
+  }else if(mode==="write"){
+    q.prompt={type:"write",text:item.t,h:[item.en],tip:"ใช้คำว่า "+item.en,name:item.un};
+    q.answer=item.s.replace("___",item.en);
+  }else{
+    q.prompt={type:"order",text:item.t};
+    q.words=item.s.replace("___",item.en).replace(/[.?]$/,"").split(" ");
+    q.answer=q.words.join(" ");
+    q.pool=shuffle(q.words);
+  }
+  return q;
+}
+
+function selectItems(opt,count){
+  var pool;
+  if(opt.weak){
+    pool=ALL.filter(function(i){var x=S.items[i.key];return x&&x.w>0;});
+    if(pool.length<count)pool=pool.concat(ALL.filter(function(i){return S.items[i.key];}));
+  }else{
+    pool=opt.lv?allItems(opt.lv):allItems(0).filter(function(i){return i.lv<=unlockedLv();});
+    if(opt.ui!==undefined&&opt.ui>=0)pool=pool.filter(function(i){return i.ui===opt.ui;});
+  }
+  var due=[],newer=[],rest=[];
+  pool.forEach(function(i){var x=S.items[i.key];
+    if(!x)newer.push(i);
+    else if(x.b<5&&x.d<=S.n)due.push(i);
+    else rest.push(i);});
+  due.sort(function(a,b){return S.items[a.key].b-S.items[b.key].b;});
+  var out=due.slice(0,Math.ceil(count*0.6));
+  out=out.concat(shuffle(newer).slice(0,count-out.length));
+  if(out.length<count)out=out.concat(shuffle(due.slice(out.length)).slice(0,count-out.length));
+  if(out.length<count)out=out.concat(shuffle(rest).slice(0,count-out.length));
+  return shuffle(out).slice(0,count);
+}
+
+function start(opt){
+  var items=selectItems(opt,10);
+  if(!items.length){toast("ยังไม่มีคำในชุดนี้");return;}
+  Q={list:items.map(function(it){var b=(S.items[it.key]||{b:0}).b;return makeQ(it,buildMode(it,b));}),
+     i:0,cor:0,xp:0,run:0,miss:[],mastered:[],t0:Date.now(),placement:false,opt:opt};
+  go("quiz");drawQ();
+}
+
+/* โหมดไวยากรณ์ไม่รู้จบ / เขียนประโยค */
+function startGen(write){
+  var list=[];
+  for(var i=0;i<10;i++){
+    if(write&&i%3===2){ /* สลับประโยคจากคลังคำจริงเข้ามาด้วย */
+      var pool=ALL.filter(function(it){return it.lv<=unlockedLv()&&it.s;});
+      var it=rp(pool);
+      list.push({item:it,mode:"write",answer:it.s.replace("___",it.en),
+        prompt:{type:"write",text:it.t,h:[it.en],tip:"ประโยคจากคลังคำศัพท์ของคุณ",name:it.un}});
+    }else list.push(genQ(genOne(0),write));
+  }
+  Q={list:list,i:0,cor:0,xp:0,run:0,miss:[],mastered:[],t0:Date.now(),placement:false,
+     opt:{gen:true,write:write}};
+  go("quiz");drawQ();
+}
+/* ชุดประจำวัน: สุ่มด้วยเมล็ดจากวันที่ ทุกคนได้ชุดเดิมทั้งวัน แล้วเปลี่ยนเองพรุ่งนี้ */
+function startDaily(){
+  var keep=RND;RND=mulberry32(seedFrom(today()));
+  var list=[],curated=selectItems({lv:0,ui:-1},4);
+  curated.forEach(function(it){var b=(S.items[it.key]||{b:0}).b;list.push(makeQ(it,buildMode(it,b)));});
+  for(var i=0;i<4;i++)list.push(genQ(genOne(0),false));
+  for(var j=0;j<2;j++)list.push(genQ(genOne(0),true));
+  RND=keep;
+  Q={list:shuffle(list),i:0,cor:0,xp:0,run:0,miss:[],mastered:[],t0:Date.now(),placement:false,
+     opt:{daily:true}};
+  go("quiz");drawQ();
+}
+
+function startPlacement(){
+  var mix=[];
+  [1,2,3].forEach(function(lv){mix=mix.concat(pick(allItems(lv),4));});
+  Q={list:mix.map(function(it){return makeQ(it,buildMode(it,0,true));}),
+     i:0,cor:0,xp:0,run:0,miss:[],mastered:[],t0:Date.now(),placement:true,byLv:{1:0,2:0,3:0}};
+  go("quiz");drawQ();
+}
+
+function drawQ(){
+  var q=Q.list[Q.i],a=$("#app");
+  var h='<div id="qTop"><button id="quit" class="pill">✕ ออก</button>'+
+    '<div id="qBar"><i style="width:'+(Q.i/Q.list.length*100)+'%"></i></div>'+
+    '<span class="pill">'+(Q.i+1)+'/'+Q.list.length+'</span></div>';
+  if(!Q.placement&&Q.run>=3)h+='<div class="xs" style="text-align:center;color:var(--warn);margin-bottom:8px">🔥 ถูกติดกัน '+Q.run+' ข้อ</div>';
+
+  var lab={mc1:"คำนี้แปลว่าอะไร",mc2:"ภาษาอังกฤษของคำนี้",listen:"ฟังแล้วเลือกคำที่ได้ยิน",
+    blank:"เติมคำในช่องว่าง",order:"เรียงคำให้เป็นประโยค",
+    gblank:"เลือกรูปที่ถูกไวยากรณ์",write:"แปลเป็นภาษาอังกฤษ แล้วพิมพ์คำตอบ"}[q.mode];
+
+  h+='<div class="qcard"><div class="qlabel">'+lab+'</div>';
+  if(q.prompt.type==="word")h+='<div class="qword">'+esc(q.prompt.text)+'</div>'+
+    '<button class="speak" data-say="'+esc(q.prompt.text)+'">'+SPK+'</button>';
+  else if(q.prompt.type==="th")h+='<div class="qword th">'+esc(q.prompt.text)+'</div>';
+  else if(q.prompt.type==="listen")h+='<button class="speak" data-say="'+esc(q.prompt.text)+'" style="width:84px;height:84px">'+SPK+'</button>'+
+    '<div class="xs dim" style="margin-top:10px">กดเพื่อฟังซ้ำ</div>';
+  else if(q.prompt.type==="sent")h+='<div class="qsent">'+esc(q.prompt.text).replace("___","<u>?</u>")+'</div>'+
+    '<div class="sm dim" style="margin-top:8px">'+esc(q.prompt.th)+'</div>';
+  else if(q.prompt.type==="gsent")h+='<div class="pill" style="margin-bottom:10px">'+esc(q.prompt.name)+'</div>'+
+    '<div class="qsent">'+esc(q.prompt.text).replace("___","<u>?</u>")+'</div>'+
+    '<div class="sm dim" style="margin-top:8px">'+esc(q.prompt.th)+'</div>';
+  else if(q.prompt.type==="write")h+='<div class="pill" style="margin-bottom:10px">'+esc(q.prompt.name||"")+'</div>'+
+    '<div class="qword th" style="font-size:22px">'+esc(q.prompt.text)+'</div>'+
+    '<div class="pool" style="justify-content:center;margin-top:12px">'+
+    (q.prompt.h||[]).map(function(w){return '<span class="chip" style="font-size:13px">'+esc(w)+'</span>';}).join("")+
+    '</div><div class="xs dim" style="margin-top:10px">ใช้คำใบ้ด้านบนช่วยได้ · ระบบจะตรวจไวยากรณ์ให้ทีละคำ</div>';
+  else h+='<div class="qsent" style="font-size:17px">'+esc(q.prompt.text)+'</div>'+
+    '<div class="xs dim" style="margin-top:8px">แตะคำด้านล่างเพื่อเรียงเป็นประโยคภาษาอังกฤษ</div>';
+  h+='</div>';
+
+  if(q.mode==="write"){
+    h+='<input id="wIn" type="text" autocomplete="off" autocorrect="off" spellcheck="false" '+
+      'placeholder="พิมพ์ประโยคภาษาอังกฤษที่นี่" style="width:100%;margin-top:14px;background:var(--card);'+
+      'border:1.5px solid var(--line);border-radius:14px;padding:15px;color:var(--txt);font-size:17px;outline:none">'+
+      '<button class="btn" id="wChk" style="margin-top:12px">ตรวจคำตอบ</button>'+
+      '<button class="btn ghost sm2" id="wSkip" style="margin-top:10px">ยังไม่รู้ ขอดูเฉลย</button>';
+  }else if(q.mode==="order"){
+    h+='<div class="slot" id="slot"></div><div class="pool" id="pool"></div>'+
+      '<button class="btn" id="chk" style="margin-top:14px;opacity:.5" disabled>ตรวจคำตอบ</button>';
+  }else{
+    h+='<div class="opts">';
+    q.options.forEach(function(o,i){
+      h+='<button class="opt" data-o="'+esc(o)+'"><span class="n">'+(i+1)+'</span><span>'+esc(o)+'</span></button>';});
+    h+='</div>';
+  }
+  a.innerHTML=h;a.className="fade";
+  $("#fb").classList.remove("show");
+  $("#quit").onclick=function(){ask("ออกจากรอบนี้? ข้อที่ตอบไปแล้วถูกบันทึกไว้ ส่วนข้อที่เหลือจะไม่ถูกนับ",
+    function(){$("#fb").classList.remove("show");go("home");},"ออกจากรอบ");};
+  a.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
+  if(q.prompt.type==="listen")setTimeout(function(){speak(q.prompt.text);},260);
+
+  if(q.mode==="write"){
+    var inp=$("#wIn");
+    setTimeout(function(){try{inp.focus();}catch(e){}},200);
+    inp.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();$("#wChk").click();}};
+    $("#wChk").onclick=function(){answerWrite(q,inp.value);};
+    $("#wSkip").onclick=function(){answerWrite(q,"",true);};
+  }
+  else if(q.mode==="order")wireOrder(q);
+  else a.querySelectorAll(".opt").forEach(function(b){b.onclick=function(){answer(q,b.dataset.o,b);};});
+}
+
+function wireOrder(q){
+  var chosen=[];
+  function paint(){
+    $("#slot").innerHTML=chosen.map(function(w,i){return '<button class="chip" data-r="'+i+'">'+esc(w)+'</button>';}).join("");
+    $("#pool").innerHTML=q.pool.map(function(w,i){
+      return '<button class="chip'+(used(i)?" used":"")+'" data-a="'+i+'">'+esc(w)+'</button>';}).join("");
+    var c=$("#chk");c.disabled=chosen.length!==q.words.length;c.style.opacity=c.disabled?.5:1;
+    $("#slot").querySelectorAll("[data-r]").forEach(function(b){b.onclick=function(){
+      var i=+b.dataset.r;usedIdx.splice(i,1);chosen.splice(i,1);paint();};});
+    $("#pool").querySelectorAll("[data-a]").forEach(function(b){b.onclick=function(){
+      var i=+b.dataset.a;if(used(i))return;usedIdx.push(i);chosen.push(q.pool[i]);paint();};});
+  }
+  var usedIdx=[];
+  function used(i){return usedIdx.indexOf(i)>=0;}
+  paint();
+  $("#chk").onclick=function(){answer(q,chosen.join(" "));};
+}
+
+function answer(q,val,btn){
+  var ok=val.replace(/\s+/g," ").trim().toLowerCase()===q.answer.toLowerCase();
+  var it=q.item,x=st(it.key);
+
+  if(Q.placement){
+    Q.byLv[it.lv]+=ok?1:0;
+  }
+  S.ans++;S.n++;
+  if(ok)S.cor++;
+  var ms=S.modes[q.mode]||(S.modes[q.mode]={c:0,t:0});ms.t++;if(ok)ms.c++;
+
+  var wasMastered=x.b>=3;
+  if(ok){x.c++;x.b=Math.min(5,x.b+1);x.d=S.n+IV[x.b-1];Q.cor++;Q.run++;
+    var gain=10+(Q.run>=3?5:0);Q.xp+=gain;S.xp+=gain;
+    if(!wasMastered&&x.b>=3)Q.mastered.push(it);
+  }else{x.w++;x.b=Math.max(0,x.b-1);x.d=S.n+1;Q.run=0;Q.miss.push({it:it,given:val,mode:q.mode});}
+  touchDay();save();
+
+  if(btn){
+    document.querySelectorAll(".opt").forEach(function(b){
+      b.classList.add("dis");
+      if(b.dataset.o===q.answer){b.classList.remove("dis");b.classList.add("ok");}
+    });
+    if(!ok)btn.classList.remove("dis"),btn.classList.add("bad");
+  }else{
+    document.querySelectorAll("#slot .chip").forEach(function(b){b.classList.add(ok?"ok":"bad");});
+  }
+
+  var ft=$("#fbTitle"),fbb=$("#fbBody");
+  ft.className=ok?"ok":"bad";
+  ft.textContent=ok?("ถูกต้อง  +"+(10+(Q.run>=3?5:0))+" XP"):"ยังไม่ถูก";
+  var body;
+  if(it.gen){body='<div style="color:var(--txt);font-size:16px">'+esc(it.en)+'</div>'+esc(it.th)+
+    '<div class="xs" style="margin-top:8px">💡 '+esc(it.tip)+'</div>';}
+  else{body='<b style="color:var(--txt)">'+esc(it.en)+'</b> = '+esc(it.th);
+  if(it.s)body+='<br><span style="color:var(--txt)">'+esc(it.s.replace("___",it.en))+'</span><br>'+esc(it.t);}
+  if(!ok&&q.mode==="order")body='คำตอบที่ถูก: <b style="color:var(--txt)">'+esc(q.answer)+'</b><br>'+esc(it.t);
+  fbb.innerHTML=body;
+  if(!ok)aiMoreBtn(q,fbb,val);
+  if(!ok||q.mode!=="listen")speak(it.gen?it.en:(it.s?it.s.replace("___",it.en):it.en));
+  $("#fb").classList.add("show");
+  $("#fbNext").textContent=(Q.i+1>=Q.list.length)?"ดูผลสรุป":"ถัดไป";
+  $("#fbNext").onclick=next;
+}
+
+/* ปุ่ม "ขออธิบายเพิ่ม" ใช้ได้กับทุกโหมด */
+function aiMoreBtn(q,fbb,given){
+  if(!aiReady())return;
+  fbb.insertAdjacentHTML("beforeend",
+    '<button class="btn ghost sm2" id="aiMore" style="margin-top:10px">🤖 ขอคำอธิบายเพิ่ม</button>');
+  var btn=$("#aiMore");
+  btn.onclick=function(){
+    var it=q.item;
+    btn.outerHTML='<div id="aiOut" class="xs" style="margin-top:10px;color:var(--txt);white-space:pre-wrap">🤖 กำลังคิด...</div>';
+    var out=$("#aiOut");
+    var p=AIROLE+"\n\nประโยค/คำที่กำลังเรียน: "+(it.gen?it.en:(it.s?it.s.replace("___",it.en):it.en))+
+      "\nความหมายไทย: "+(it.th||it.t)+
+      (given?"\nผู้เรียนตอบว่า: "+given:"")+
+      (it.tip?"\nหลักที่เกี่ยวข้อง: "+it.tip:"")+
+      "\n\nอธิบายเป็นภาษาไทยไม่เกิน 4 บรรทัด ว่าทำไมประโยคนี้ต้องเป็นแบบนี้ "+
+      "แล้วยกตัวอย่างประโยคอังกฤษสั้น ๆ อีก 2 ประโยคพร้อมคำแปลไทย ห้ามใช้ตาราง";
+    aiText(p,function(o){if($("#aiOut"))$("#aiOut").textContent=o.text;}).then(function(t){
+      if(!t&&$("#aiOut"))$("#aiOut").textContent="ตอนนี้ขอคำอธิบายเพิ่มไม่ได้ ลองใหม่อีกครั้งภายหลัง";});
+  };
+}
+
+/* ---- ตรวจคำตอบโหมดเขียนประโยค ---- */
+function diffHTML(ops){
+  return ops.map(function(o){
+    if(o.o==="same")return esc(o.u);
+    if(o.o==="sub")return '<s style="color:var(--bad)">'+esc(o.u)+'</s> <b style="color:var(--ok)">'+esc(o.t)+'</b>';
+    if(o.o==="extra")return '<s style="color:var(--bad)">'+esc(o.u)+'</s>';
+    return '<b style="color:var(--ok)">['+esc(o.t)+']</b>';
+  }).join(" ");
+}
+function answerWrite(q,raw,skipped){
+  var it=q.item,x=st(it.key),key=norm(q.answer);
+  var r=skipped?{verdict:"wrong",tips:["กดดูเฉลย — ลองอ่านประโยคเฉลยออกเสียงหนึ่งรอบก่อนไปต่อ"],types:[],ops:[]}
+    :checkWriting(raw,q.answer,S.ok[key]||[]);
+  var ok=r.verdict==="ok",half=(r.verdict==="close"||r.verdict==="order");
+
+  S.ans++;S.n++;S.wr.t++;
+  if(ok){S.cor++;S.wr.c++;}
+  var ms=S.modes.write||(S.modes.write={c:0,t:0});ms.t++;if(ok)ms.c++;
+  r.types.forEach(function(t){S.gerr[t]=(S.gerr[t]||0)+1;});
+
+  var wasM=x.b>=3,gain=0;
+  if(ok){x.c++;x.b=Math.min(5,x.b+1);x.d=S.n+IV[x.b-1];Q.cor++;Q.run++;gain=12+(Q.run>=3?5:0);
+    if(!wasM&&x.b>=3)Q.mastered.push(it);}
+  else if(half){x.d=S.n+2;Q.run=0;gain=6;Q.miss.push({it:it,given:raw,mode:"write"});}
+  else{x.w++;x.b=Math.max(0,x.b-1);x.d=S.n+1;Q.run=0;Q.miss.push({it:it,given:raw,mode:"write"});}
+  Q.xp+=gain;S.xp+=gain;
+  touchDay();save();
+
+  var ft=$("#fbTitle"),fbb=$("#fbBody");
+  ft.className=ok?"ok":(half?"":"bad");
+  if(!ok&&half)ft.style.color="var(--warn)";else ft.style.color="";
+  ft.textContent=ok?("ถูกต้อง  +"+gain+" XP"):half?("เกือบถูกแล้ว  +"+gain+" XP"):"ยังไม่ถูก";
+
+  var body='<div style="color:var(--txt);font-size:16px;margin-bottom:6px">'+esc(q.answer)+'</div>'+
+    '<div style="margin-bottom:8px">'+esc(it.th||it.t)+'</div>';
+  if(!ok&&!skipped&&r.ops.length)
+    body+='<div style="background:#0d1328;border-radius:10px;padding:10px;margin-bottom:8px;color:var(--dim)">'+
+      diffHTML(r.ops)+'</div>';
+  if(r.tips.length)body+='<div style="color:var(--txt)">• '+r.tips.map(esc).join('<br>• ')+'</div>';
+  if(it.tip)body+='<div class="xs" style="margin-top:8px">💡 '+esc(it.tip)+'</div>';
+  if(!ok&&!skipped&&norm(raw))
+    body+='<button class="btn ghost sm2" id="acceptMine" style="margin-top:12px">'+
+      'คำตอบของฉันก็ถูกเหมือนกัน · นับว่าถูก</button>';
+  fbb.innerHTML=body;
+
+  function markOk(note){
+    if(!S.ok[key])S.ok[key]=[];
+    if(norm(raw)&&S.ok[key].indexOf(norm(raw))<0)S.ok[key].push(norm(raw));
+    S.cor++;S.wr.c++;ms.c++;x.c++;x.b=Math.min(5,x.b+1);x.d=S.n+IV[x.b-1];
+    S.xp+=12;Q.xp+=12;Q.cor++;
+    Q.miss=Q.miss.filter(function(m){return m.it!==it;});
+    save();
+    var a=$("#acceptMine");if(a)a.outerHTML='<div class="xs" style="margin-top:10px;color:var(--ok)">'+note+'</div>';
+    var t=$("#fbTitle");if(t){t.className="ok";t.style.color="";t.textContent="นับว่าถูก  +12 XP";}
+  }
+  var am=$("#acceptMine");
+  if(am)am.onclick=function(){markOk("✓ จำไว้แล้ว ครั้งหน้าประโยคนี้จะนับว่าถูก");};
+
+  /* ให้ AI ตรวจทานซ้ำเมื่อระบบกฎบอกว่ายังไม่ถูก — แก้กรณีตอบถูกแต่ใช้คำต่างจากเฉลย */
+  if(!ok&&!skipped&&norm(raw)&&aiReady()){
+    var tok2=Q.i+"/"+Q.list.length;
+    fbb.insertAdjacentHTML("beforeend",
+      '<div id="aiBox" class="xs" style="margin-top:10px;color:var(--brand)">🤖 กำลังให้ AI ตรวจทานอีกรอบ...</div>');
+    aiCheckSentence(it.th||it.t,q.answer,raw).then(function(r){
+      var box=$("#aiBox");
+      if(!box||tok2!==Q.i+"/"+Q.list.length)return;
+      if(!r){box.remove();return;}
+      if(r.ok){box.innerHTML='<b style="color:var(--ok)">🤖 AI บอกว่าประโยคของคุณใช้ได้</b><br>'+
+        esc(r.th||"")+(r.better?'<br>สำนวนที่เป็นธรรมชาติ: '+esc(r.better):"");
+        markOk("✓ AI ยืนยันแล้ว ครั้งหน้าประโยคนี้จะนับว่าถูก");}
+      else box.innerHTML='<b style="color:var(--brand)">🤖 AI อธิบายเพิ่ม</b><br>'+esc(r.th||"")+
+        (r.better?'<br>ลองแบบนี้: <span style="color:var(--txt)">'+esc(r.better)+'</span>':"");
+    });
+  }
+  aiMoreBtn(q,fbb,raw);
+
+  speak(q.answer);
+  $("#fb").classList.add("show");
+  $("#fbNext").textContent=(Q.i+1>=Q.list.length)?"ดูผลสรุป":"ถัดไป";
+  $("#fbNext").onclick=next;
+}
+
+function next(){
+  $("#fb").classList.remove("show");
+  Q.i++;
+  if(Q.i>=Q.list.length)finish();else drawQ();
+}
+
+function finish(){
+  var secs=Math.round((Date.now()-Q.t0)/1000);
+  var pct=Math.round(Q.cor/Q.list.length*100);
+  if(!Q.placement)S.sessions++;
+  if(Q.opt&&Q.opt.daily)S.daily=today();
+
+  if(Q.placement){
+    var lv=1;
+    if(Q.byLv[3]>=3)lv=3;else if(Q.byLv[2]>=3)lv=2;else if(Q.byLv[1]>=3)lv=2;
+    if(Q.byLv[2]>=2&&Q.byLv[3]>=2)lv=3;
+    S.placed=true;S.unlocked=Math.max(S.unlocked,lv);
+  }
+  save();
+
+  var h='<div style="text-align:center;margin:18px 0 6px"><div class="big" style="font-size:52px">'+
+    (pct>=80?"🎉":pct>=50?"👍":"💪")+'</div>'+
+    '<h1 style="font-size:22px;margin-top:8px">'+(Q.placement?"ผลวัดระดับ":"จบรอบแล้ว")+'</h1>'+
+    '<div class="sm dim">ใช้เวลา '+Math.floor(secs/60)+" นาที "+(secs%60)+' วินาที</div></div>';
+
+  h+='<div class="mini">'+
+    '<div class="stat"><b>'+Q.cor+'/'+Q.list.length+'</b><span class="xs dim">ตอบถูก</span></div>'+
+    '<div class="stat"><b>'+pct+'%</b><span class="xs dim">ความแม่นรอบนี้</span></div>'+
+    '<div class="stat"><b>+'+Q.xp+'</b><span class="xs dim">XP ที่ได้</span></div>'+
+    '<div class="stat"><b>'+S.streak+' วัน</b><span class="xs dim">เล่นต่อเนื่อง</span></div></div>';
+
+  if(Q.placement){
+    h+='<div class="card" style="margin-top:12px;border-color:var(--brand)"><b>ระดับที่แนะนำ: '+
+      BANK[S.unlocked-1].name+'</b><div class="sm dim" style="margin-top:4px">'+
+      'ตอบถูก — ระดับ 1: '+Q.byLv[1]+'/4 · ระดับ 2: '+Q.byLv[2]+'/4 · ระดับ 3: '+Q.byLv[3]+'/4<br>'+
+      'ปลดล็อกถึงระดับ '+S.unlocked+' ให้แล้ว เริ่มจากบทแรกของระดับนี้ได้เลย</div></div>';
+  }
+
+  if(Q.mastered.length){
+    h+='<div class="card" style="margin-top:12px"><b style="color:var(--ok)">✓ คำที่เลื่อนเป็น “จำได้แล้ว” '+
+      Q.mastered.length+' คำ</b><div class="sm dim" style="margin-top:6px">'+
+      Q.mastered.map(function(i){return esc(i.en);}).join(" · ")+'</div></div>';
+  }
+
+  if(Q.miss.length){
+    h+='<div class="card" style="margin-top:12px"><b>ทบทวนข้อที่พลาด ('+Q.miss.length+')</b>'+
+      '<div style="margin-top:4px">';
+    Q.miss.forEach(function(m){
+      h+='<button class="listrow" data-say="'+esc(m.it.en)+'" style="width:100%;text-align:left">'+
+        '<div style="flex:1;min-width:0"><b>'+esc(m.it.en)+'</b>'+
+        '<div class="xs dim">'+esc(m.it.th)+'</div></div><span class="pill">🔊</span></button>';});
+    h+='</div><div class="xs dim" style="margin-top:10px">คำเหล่านี้จะถูกนำกลับมาถามในรอบถัดไปอัตโนมัติ</div></div>';
+  }else if(!Q.placement){
+    h+='<div class="card" style="margin-top:12px"><b style="color:var(--ok)">ไม่พลาดเลยทั้งรอบ</b>'+
+      '<div class="sm dim">ระบบจะยืดเวลาทบทวนคำเหล่านี้ออกไป เพื่อให้คุณได้เจอคำใหม่มากขึ้น</div></div>';
+  }
+
+  h+='<button class="btn" id="again" style="margin-top:16px">เล่นอีกรอบ 10 ข้อ</button>'+
+     '<button class="btn ghost sm2" id="home" style="margin-top:10px">กลับหน้าแรก</button>'+
+     '<button class="btn ghost sm2" id="toStats" style="margin-top:10px">ดูผลลัพธ์รวม</button>';
+
+  var a=$("#app");a.innerHTML=h;a.className="fade";
+  $("#fb").classList.remove("show");
+  $("#nav").classList.remove("hide");
+  a.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
+  $("#again").onclick=function(){
+    if(Q.placement)start({lv:S.unlocked,ui:-1});
+    else if(Q.opt&&Q.opt.daily)startGen(false);
+    else if(Q.opt&&Q.opt.gen)startGen(Q.opt.write);
+    else start(Q.opt);};
+  $("#home").onclick=function(){go("home");};
+  $("#toStats").onclick=function(){go("stats");};
+  var bs=document.querySelectorAll("#nav button");
+  for(var i=0;i<bs.length;i++)bs[i].classList.remove("on");
+}
+
+/* ===================== 7. โหมดคุยกับโค้ช AI ===================== */
+var CH={msgs:[],topic:"",busy:false};
+var TOPICS=[["ที่ร้านอาหาร","ordering food at a restaurant"],["สัมภาษณ์งาน","a job interview"],
+  ["เดินทาง / สนามบิน","travelling and the airport"],["คุยเล่นกับเพื่อนต่างชาติ","small talk with a foreign friend"],
+  ["ประชุมงาน","a work meeting"],["ไปหาหมอ","visiting a doctor"]];
+function chatHTML(){
+  var h='<div class="row" style="margin:6px 2px 12px"><div style="flex:1">'+
+    '<h1 style="font-size:19px">โค้ชสนทนา AI</h1>'+
+    '<div class="sm dim">อ่านคำถาม แล้วพิมพ์ตอบเป็นภาษาอังกฤษ โค้ชจะแก้ให้ทุกครั้ง</div></div>'+
+    (CH.topic?'<button class="pill" id="chReset">เปลี่ยนหัวข้อ</button>':'')+'</div>';
+  if(!CH.topic){
+    h+='<div class="card"><b>เลือกหัวข้อที่อยากฝึก</b><div class="pool" style="margin-top:12px">'+
+      TOPICS.map(function(t,i){return '<button class="chip" data-tp="'+i+'" style="padding:12px 14px">'+esc(t[0])+'</button>';}).join("")+
+      '</div><div class="xs dim" style="margin-top:12px">ตอบผิดไม่เป็นไร โค้ชจะบอกประโยคที่ถูกให้ทุกข้อ '+
+      'บทสนทนาจะยังไม่ถูกซิงก์ใน Phase 1</div></div>';
+    return h;
+  }
+  h+='<div id="chList">'+CH.msgs.map(function(m){return bubble(m);}).join("")+'</div>';
+  h+='<div class="row" style="gap:8px;margin-top:12px">'+
+    '<input id="chIn" type="text" autocomplete="off" spellcheck="false" placeholder="พิมพ์คำตอบภาษาอังกฤษ" '+
+    'style="flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px;'+
+    'color:var(--txt);font-size:16px;outline:none">'+
+    '<button class="btn" id="chSend" style="width:auto;padding:14px 18px">ส่ง</button></div>';
+  return h;
+}
+function bubble(m){
+  if(m.r==="u")return '<div style="display:flex;justify-content:flex-end;margin:8px 0">'+
+    '<div style="background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;border-radius:16px 16px 4px 16px;'+
+    'padding:11px 14px;max-width:85%;font-size:15.5px">'+esc(m.t)+'</div></div>';
+  var h='<div style="margin:8px 0;max-width:92%"><div class="card" style="border-radius:16px 16px 16px 4px;padding:13px">';
+  if(m.fix)h+='<div style="background:rgba(255,194,75,.12);border-radius:10px;padding:9px;margin-bottom:9px">'+
+    '<div class="xs" style="color:var(--warn);font-weight:700">แก้ประโยคของคุณ</div>'+
+    '<div style="color:var(--txt);font-size:15px">'+esc(m.fix)+'</div>'+
+    (m.th?'<div class="xs dim" style="margin-top:4px">'+esc(m.th)+'</div>':'')+'</div>';
+  else if(m.th)h+='<div class="xs" style="color:var(--ok);margin-bottom:8px">✓ '+esc(m.th)+'</div>';
+  h+='<div style="font-size:16px">'+esc(m.t)+'</div>';
+  if(m.tth)h+='<div class="xs dim" style="margin-top:5px">'+esc(m.tth)+'</div>';
+  h+='<button class="pill" data-say="'+esc(m.t)+'" style="margin-top:9px">🔊 ฟัง</button></div></div>';
+  return h;
+}
+function chatBind(){
+  document.querySelectorAll("[data-tp]").forEach(function(b){
+    b.onclick=function(){CH.topic=TOPICS[+b.dataset.tp][1];CH.msgs=[];render();chatTurn(null);};});
+  var r=$("#chReset");if(r)r.onclick=function(){CH.topic="";CH.msgs=[];render();};
+  var s=$("#chSend"),i=$("#chIn");
+  if(s){s.onclick=function(){chatTurn(i.value);};
+    i.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();chatTurn(i.value);}};}
+  document.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
+}
+function chatTurn(userText){
+  if(CH.busy)return;
+  if(userText!==null&&!String(userText).trim())return;
+  var lvName=["ง่ายมาก (ประโยคสั้น)","ระดับกลาง","ระดับสูง ใช้สำนวนได้"][unlockedLv()-1];
+  if(userText!==null){CH.msgs.push({r:"u",t:userText.trim()});S.ans++;S.n++;}
+  CH.busy=true;render();
+  var list=$("#chList");
+  if(list)list.insertAdjacentHTML("beforeend",'<div class="xs dim" id="chWait" style="margin:8px 0">โค้ชกำลังพิมพ์...</div>');
+  window.scrollTo(0,document.body.scrollHeight);
+
+  var hist=CH.msgs.map(function(m){return (m.r==="u"?"ผู้เรียน: ":"โค้ช: ")+m.t;}).join("\n");
+  var p=AIROLE+"\nคุณกำลังฝึกสนทนาภาษาอังกฤษกับผู้เรียน หัวข้อ: "+CH.topic+
+    "\nระดับผู้เรียน: "+lvName+" — ใช้ภาษาอังกฤษให้เหมาะกับระดับนี้ ประโยคสั้น ชัดเจน\n"+
+    (hist?"บทสนทนาที่ผ่านมา:\n"+hist+"\n":"เริ่มบทสนทนาเป็นคนแรก\n")+
+    "\nตอบเป็น JSON เท่านั้น: {"+
+    '"fix":"ประโยคภาษาอังกฤษที่ถูกต้องของผู้เรียน ถ้าผู้เรียนเขียนถูกอยู่แล้วหรือยังไม่ได้พูดให้ใส่ค่าว่าง",'+
+    '"th":"คำแนะนำภาษาไทยสั้นมาก 1 ประโยค บอกว่าแก้อะไรหรือชมถ้าถูก",'+
+    '"reply":"ประโยคภาษาอังกฤษที่คุณตอบกลับ ลงท้ายด้วยคำถามใหม่ 1 คำถามเสมอ ไม่เกิน 2 ประโยค",'+
+    '"tth":"คำแปลไทยของ reply"}';
+  aiJSON(p,"default").then(function(r){
+    CH.busy=false;
+    if(!r||!r.reply){CH.msgs.push({r:"c",t:"Sorry, I cannot reply right now. Please try again.",
+      tth:"ตอนนี้โค้ชตอบไม่ได้ ลองกดส่งใหม่อีกครั้ง"});render();return;}
+    if(userText!==null){
+      var good=!r.fix||norm(r.fix)===norm(userText);
+      if(good){S.cor++;S.xp+=8;}else S.xp+=4;
+      var cs=S.modes.chat||(S.modes.chat={c:0,t:0});cs.t++;if(good)cs.c++;
+      touchDay();
+    }
+    CH.msgs.push({r:"c",t:r.reply,tth:r.tth,
+      fix:(userText!==null&&r.fix&&norm(r.fix)!==norm(userText))?r.fix:"",
+      th:(userText!==null?r.th:"")});
+    save();render();
+    setTimeout(function(){window.scrollTo(0,document.body.scrollHeight);
+      var i=$("#chIn");if(i)try{i.focus();}catch(e){}},80);
+  });
+}
+
+/* ===================== 8. ให้ AI สร้างบทเรียนใหม่ ===================== */
+function applyCustom(){
+  BANK.forEach(function(L){L.units=L.units.filter(function(u){return !u.cust;});});
+  (S.cust||[]).forEach(function(c){
+    var L=BANK[(c.lv||1)-1];if(L)L.units.push({name:c.name,tip:c.tip,items:c.items,cust:true});});
+  ALL=allItems();
+}
+function aiMakeLesson(topic,lv,statusEl){
+  var weak=[];for(var t in S.gerr)weak.push(ERRTH[t]||t);
+  var known=ALL.filter(function(i){return i.lv===lv;}).map(function(i){return i.en;}).slice(0,60).join(", ");
+  statusEl.textContent="🤖 กำลังสร้างบทเรียนใหม่... (ประมาณ 10-20 วินาที)";
+  var p=AIROLE+"\n\nสร้างบทเรียนคำศัพท์ภาษาอังกฤษใหม่ 8 คำ สำหรับผู้เรียนชาวไทย"+
+    "\nระดับ: "+["ผู้เริ่มต้น (A1)","ระดับกลาง (A2-B1)","ระดับสูง (B1-B2)"][lv-1]+
+    "\nหัวข้อที่ผู้เรียนขอ: "+(topic||"ชีวิตประจำวันทั่วไป")+
+    (weak.length?"\nจุดที่ผู้เรียนมักผิด ให้แทรกประโยคที่ได้ฝึกเรื่องนี้: "+weak.slice(0,4).join(", "):"")+
+    "\nห้ามซ้ำกับคำเหล่านี้: "+known+
+    "\n\nตอบเป็น JSON เท่านั้น ห้ามมีข้อความอื่น:\n"+
+    '{"name":"ชื่อบทภาษาไทยสั้น ๆ","tip":"เคล็ดไวยากรณ์ภาษาไทย 1 ประโยค",'+
+    '"items":[{"en":"คำอังกฤษ","th":"คำแปลไทย","s":"ประโยคตัวอย่างที่มี ___ แทนตำแหน่งของคำนั้น","t":"คำแปลไทยของประโยค"}]}'+
+    "\nกติกา: ประโยค s ต้องมี ___ หนึ่งจุดเสมอ ความยาว 5-10 คำ และต้องไม่มีคำตอบปรากฏซ้ำในประโยค";
+  return aiJSON(p,"default").then(function(r){
+    if(!r||!r.items){statusEl.textContent="สร้างไม่สำเร็จ ลองกดใหม่อีกครั้ง";return null;}
+    var items=r.items.filter(function(i){return i&&i.en&&i.th&&i.s&&i.t&&i.s.indexOf("___")>=0;})
+      .map(function(i){return{en:String(i.en).trim(),th:String(i.th).trim(),s:String(i.s).trim(),t:String(i.t).trim()};});
+    if(items.length<4){statusEl.textContent="ผลลัพธ์ไม่สมบูรณ์ ลองกดใหม่อีกครั้ง";return null;}
+    if(!S.cust)S.cust=[];
+    S.cust.push({name:(r.name||topic||"บทใหม่")+" (AI)",tip:r.tip||"บทนี้สร้างโดย AI ตามหัวข้อที่คุณขอ",
+      lv:lv,items:items,at:today()});
+    save();applyCustom();
+    statusEl.textContent="✓ เพิ่มบทใหม่ "+items.length+" คำเรียบร้อย";
+    setTimeout(function(){render();},700);
+    return items;
+  });
+}
+
+/* ------------------------------- 6. เริ่ม ------------------------------- */
+load();
+applyCustom();
+unlockedLv();
+go("home");
+aiSync();
+initCloud();
+document.addEventListener("keydown",function(e){
+  if(view!=="quiz")return;
+  if(e.target&&e.target.tagName==="INPUT")return;
+  if($("#fb").classList.contains("show")&&(e.key==="Enter"||e.key===" ")){e.preventDefault();next();return;}
+  var n=parseInt(e.key,10);
+  if(n>=1&&n<=4){var b=document.querySelectorAll(".opt")[n-1];if(b)b.click();}
+});
+</script>
+</body>
+</html>
