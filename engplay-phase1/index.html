@@ -502,16 +502,61 @@ function ask(msg,onYes,yesLabel){
 }
 function toast(msg){var d=document.createElement("div");d.className="toast";d.textContent=msg;
   document.body.appendChild(d);setTimeout(function(){d.remove();},1800);}
-function speak(txt){
-  try{
-    if(!window.speechSynthesis)return;
-    speechSynthesis.cancel();
-    var u=new SpeechSynthesisUtterance(txt);u.lang="en-US";u.rate=.85;
-    var vs=speechSynthesis.getVoices();
-    for(var i=0;i<vs.length;i++){if(/en[-_]US/i.test(vs[i].lang)){u.voice=vs[i];break;}}
-    speechSynthesis.speak(u);
-  }catch(e){}
+
+var engPlayVoices = [];
+
+function loadEngPlayVoices() {
+  if (!window.speechSynthesis) return;
+
+  engPlayVoices = window.speechSynthesis.getVoices();
 }
+
+if (window.speechSynthesis) {
+  loadEngPlayVoices();
+
+  window.speechSynthesis.addEventListener(
+    "voiceschanged",
+    loadEngPlayVoices
+  );
+}
+
+function speak(txt) {
+  try {
+    if (!window.speechSynthesis || !txt) return;
+
+    speechSynthesis.cancel();
+
+    var utterance = new SpeechSynthesisUtterance(txt);
+    utterance.lang = "en-US";
+    utterance.rate = 0.9;
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    if (!engPlayVoices.length) {
+      loadEngPlayVoices();
+    }
+
+    var usVoices = engPlayVoices.filter(function(voice) {
+      return /^en-US$/i.test(voice.lang);
+    });
+
+    if (usVoices.length) {
+      var preferredVoice = usVoices.find(function(voice) {
+        return /natural|premium|enhanced|samantha|ava/i.test(
+          voice.name
+        );
+      });
+
+      utterance.voice = preferredVoice || usVoices[0];
+    }
+
+    speechSynthesis.speak(utterance);
+
+  } catch (error) {
+    console.error("EngPlay TTS Error:", error);
+  }
+}
+
 if(window.speechSynthesis)speechSynthesis.onvoiceschanged=function(){};
 function ringSVG(pct){
   var r=16,c=2*Math.PI*r,off=c*(1-pct/100);
