@@ -88,9 +88,6 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 .qword.th{font-size:26px}
 .qsent{font-size:19px;font-weight:600;line-height:1.6}
 .qsent u{color:var(--brand);text-decoration:none;border-bottom:2px dashed var(--brand);padding:0 14px}
-.speak{margin:12px auto 0;width:62px;height:62px;border-radius:50%;background:var(--card2);
-  border:1px solid var(--line);display:grid;place-items:center}
-.speak svg{width:28px;height:28px;fill:var(--brand)}
 .opts{display:flex;flex-direction:column;gap:10px;margin-top:14px}
 .opt{display:flex;align-items:center;gap:10px;background:var(--card);border:1.5px solid var(--line);
   border-radius:14px;padding:14px;min-height:54px;text-align:left;font-size:16px;font-weight:600;transition:.15s}
@@ -503,61 +500,6 @@ function ask(msg,onYes,yesLabel){
 function toast(msg){var d=document.createElement("div");d.className="toast";d.textContent=msg;
   document.body.appendChild(d);setTimeout(function(){d.remove();},1800);}
 
-var engPlayVoices = [];
-
-function loadEngPlayVoices() {
-  if (!window.speechSynthesis) return;
-
-  engPlayVoices = window.speechSynthesis.getVoices();
-}
-
-if (window.speechSynthesis) {
-  loadEngPlayVoices();
-
-  window.speechSynthesis.addEventListener(
-    "voiceschanged",
-    loadEngPlayVoices
-  );
-}
-
-function speak(txt) {
-  try {
-    if (!window.speechSynthesis || !txt) return;
-
-    speechSynthesis.cancel();
-
-    var utterance = new SpeechSynthesisUtterance(txt);
-    utterance.lang = "en-US";
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    if (!engPlayVoices.length) {
-      loadEngPlayVoices();
-    }
-
-    var usVoices = engPlayVoices.filter(function(voice) {
-      return /^en-US$/i.test(voice.lang);
-    });
-
-    if (usVoices.length) {
-      var preferredVoice = usVoices.find(function(voice) {
-        return /natural|premium|enhanced|samantha|ava/i.test(
-          voice.name
-        );
-      });
-
-      utterance.voice = preferredVoice || usVoices[0];
-    }
-
-    speechSynthesis.speak(utterance);
-
-  } catch (error) {
-    console.error("EngPlay TTS Error:", error);
-  }
-}
-
-if(window.speechSynthesis)speechSynthesis.onvoiceschanged=function(){};
 function ringSVG(pct){
   var r=16,c=2*Math.PI*r,off=c*(1-pct/100);
   return '<div class="ring"><svg width="38" height="38" viewBox="0 0 38 38">'+
@@ -566,7 +508,6 @@ function ringSVG(pct){
   'stroke-linecap="round" stroke-dasharray="'+c+'" stroke-dashoffset="'+off+'"/></svg>'+
   '<span>'+pct+'%</span></div>';
 }
-var SPK='<svg viewBox="0 0 24 24"><path d="M4 9v6h3l5 4V5L7 9H4zm12.5 3a4.5 4.5 0 0 0-2-3.7v7.4a4.5 4.5 0 0 0 2-3.7zm-2-8.4v2.1A7 7 0 0 1 14.5 20v2.1A9 9 0 0 0 14.5 3.6z"/></svg>';
 
 /* ================= 3b. เครื่องสร้างโจทย์ไวยากรณ์ (ไม่รู้จบ) ================= */
 var RND=Math.random;
@@ -1101,7 +1042,7 @@ function statsHTML(){
   h+='<div class="xs dim" style="margin-top:12px">นับว่า “จำได้แล้ว” เมื่อตอบคำนั้นถูกติดกัน 3 ครั้งในรูปแบบต่างกัน</div></div>';
 
   /* ความแม่นตามรูปแบบคำถาม */
-  var MN={mc1:"อังกฤษ → ไทย",mc2:"ไทย → อังกฤษ",listen:"ฟังเสียง",blank:"เติมประโยค",order:"เรียงประโยค",
+  var MN={mc1:"อังกฤษ → ไทย",mc2:"ไทย → อังกฤษ",blank:"เติมประโยค",order:"เรียงประโยค",
     gblank:"เลือกรูปไวยากรณ์",write:"เขียนประโยคเอง",chat:"สนทนากับโค้ช AI"};
   var any=false;for(var k in MN)if(S.modes[k])any=true;
   if(any){
@@ -1157,7 +1098,7 @@ function statsHTML(){
 
 function wordsHTML(){
   var h='<h1 style="font-size:19px;margin:6px 2px 4px">คลังคำศัพท์</h1>'+
-    '<div class="sm dim" style="margin:0 2px 12px">กดที่คำเพื่อฟังเสียง · '+ALL.length+' รายการ</div>';
+    '<div class="sm dim" style="margin:0 2px 12px">คำศัพท์พร้อมคำแปลและตัวอย่างประโยค · '+ALL.length+' รายการ</div>';
   BANK.forEach(function(L){
     h+='<div class="card" style="margin-bottom:12px"><b>'+L.name+'</b>';
     L.units.forEach(function(U,ui){
@@ -1169,9 +1110,9 @@ function wordsHTML(){
           x.b>=5?'<span class="pill" style="color:var(--ok)">แม่นแล้ว</span>':
           x.b>=3?'<span class="pill" style="color:var(--ok)">จำได้</span>':
           '<span class="pill" style="color:var(--warn)">กำลังเรียน</span>';
-        h+='<button class="listrow" data-say="'+esc(it.en)+'" style="width:100%;text-align:left">'+
+        h+='<div class="listrow" style="width:100%;text-align:left">'+
           '<div style="flex:1;min-width:0"><b>'+esc(it.en)+'</b><div class="xs dim">'+esc(it.th)+'</div></div>'+
-          badge+'</button>';
+          badge+'</div>';
       });
       h+='</div>';
     });
@@ -1205,8 +1146,6 @@ function bind(){
       S=fresh();save();applyCustom();toast("ล้างข้อมูลแล้ว");go("home");},"ล้างข้อมูล");};
   document.querySelectorAll("[data-lv]").forEach(function(b){
     b.onclick=function(){start({lv:+b.dataset.lv,ui:+b.dataset.ui});};});
-  document.querySelectorAll("[data-say]").forEach(function(b){
-    b.onclick=function(){speak(b.dataset.say);};});
 }
 
 /* ------------------------------ 5. ตัวเกม ------------------------------- */
@@ -1216,8 +1155,8 @@ var IV=[1,4,10,25,60,9999]; /* ช่วงทบทวนตามกล่อ�
 function buildMode(item,box,isPlacement){
   var pool;
   if(isPlacement)pool=["mc1","blank"];
-  else if(box===0)pool=["mc1","mc1","listen"];
-  else if(box===1)pool=["mc2","blank","listen"];
+  else if(box===0)pool=["mc1","mc1","mc2"];
+  else if(box===1)pool=["mc2","blank","mc1"];
   else if(box===2)pool=["mc2","blank","order"];
   else if(box===3)pool=["blank","order","mc2"];
   else pool=["write","blank","order"];
@@ -1235,10 +1174,6 @@ function makeQ(item,mode){
     q.answer=item.th;
   }else if(mode==="mc2"){
     q.prompt={type:"th",text:item.th};
-    q.options=shuffle([item.en].concat(pick(others,3).map(function(i){return i.en;})));
-    q.answer=item.en;
-  }else if(mode==="listen"){
-    q.prompt={type:"listen",text:item.en};
     q.options=shuffle([item.en].concat(pick(others,3).map(function(i){return i.en;})));
     q.answer=item.en;
   }else if(mode==="blank"){
@@ -1330,16 +1265,13 @@ function drawQ(){
     '<span class="pill">'+(Q.i+1)+'/'+Q.list.length+'</span></div>';
   if(!Q.placement&&Q.run>=3)h+='<div class="xs" style="text-align:center;color:var(--warn);margin-bottom:8px">🔥 ถูกติดกัน '+Q.run+' ข้อ</div>';
 
-  var lab={mc1:"คำนี้แปลว่าอะไร",mc2:"ภาษาอังกฤษของคำนี้",listen:"ฟังแล้วเลือกคำที่ได้ยิน",
+  var lab={mc1:"คำนี้แปลว่าอะไร",mc2:"ภาษาอังกฤษของคำนี้",
     blank:"เติมคำในช่องว่าง",order:"เรียงคำให้เป็นประโยค",
     gblank:"เลือกรูปที่ถูกไวยากรณ์",write:"แปลเป็นภาษาอังกฤษ แล้วพิมพ์คำตอบ"}[q.mode];
 
   h+='<div class="qcard"><div class="qlabel">'+lab+'</div>';
-  if(q.prompt.type==="word")h+='<div class="qword">'+esc(q.prompt.text)+'</div>'+
-    '<button class="speak" data-say="'+esc(q.prompt.text)+'">'+SPK+'</button>';
+  if(q.prompt.type==="word")h+='<div class="qword">'+esc(q.prompt.text)+'</div>';
   else if(q.prompt.type==="th")h+='<div class="qword th">'+esc(q.prompt.text)+'</div>';
-  else if(q.prompt.type==="listen")h+='<button class="speak" data-say="'+esc(q.prompt.text)+'" style="width:84px;height:84px">'+SPK+'</button>'+
-    '<div class="xs dim" style="margin-top:10px">กดเพื่อฟังซ้ำ</div>';
   else if(q.prompt.type==="sent")h+='<div class="qsent">'+esc(q.prompt.text).replace("___","<u>?</u>")+'</div>'+
     '<div class="sm dim" style="margin-top:8px">'+esc(q.prompt.th)+'</div>';
   else if(q.prompt.type==="gsent")h+='<div class="pill" style="margin-bottom:10px">'+esc(q.prompt.name)+'</div>'+
@@ -1373,8 +1305,6 @@ function drawQ(){
   $("#fb").classList.remove("show");
   $("#quit").onclick=function(){ask("ออกจากรอบนี้? ข้อที่ตอบไปแล้วถูกบันทึกไว้ ส่วนข้อที่เหลือจะไม่ถูกนับ",
     function(){$("#fb").classList.remove("show");go("home");},"ออกจากรอบ");};
-  a.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
-  if(q.prompt.type==="listen")setTimeout(function(){speak(q.prompt.text);},260);
 
   if(q.mode==="write"){
     var inp=$("#wIn");
@@ -1444,7 +1374,6 @@ function answer(q,val,btn){
   if(!ok&&q.mode==="order")body='คำตอบที่ถูก: <b style="color:var(--txt)">'+esc(q.answer)+'</b><br>'+esc(it.t);
   fbb.innerHTML=body;
   if(!ok)aiMoreBtn(q,fbb,val);
-  if(!ok||q.mode!=="listen")speak(it.gen?it.en:(it.s?it.s.replace("___",it.en):it.en));
   $("#fb").classList.add("show");
   $("#fbNext").textContent=(Q.i+1>=Q.list.length)?"ดูผลสรุป":"ถัดไป";
   $("#fbNext").onclick=next;
@@ -1547,7 +1476,6 @@ function answerWrite(q,raw,skipped){
   }
   aiMoreBtn(q,fbb,raw);
 
-  speak(q.answer);
   $("#fb").classList.add("show");
   $("#fbNext").textContent=(Q.i+1>=Q.list.length)?"ดูผลสรุป":"ถัดไป";
   $("#fbNext").onclick=next;
@@ -1601,9 +1529,9 @@ function finish(){
     h+='<div class="card" style="margin-top:12px"><b>ทบทวนข้อที่พลาด ('+Q.miss.length+')</b>'+
       '<div style="margin-top:4px">';
     Q.miss.forEach(function(m){
-      h+='<button class="listrow" data-say="'+esc(m.it.en)+'" style="width:100%;text-align:left">'+
+      h+='<div class="listrow" style="width:100%;text-align:left">'+
         '<div style="flex:1;min-width:0"><b>'+esc(m.it.en)+'</b>'+
-        '<div class="xs dim">'+esc(m.it.th)+'</div></div><span class="pill">🔊</span></button>';});
+        '<div class="xs dim">'+esc(m.it.th)+'</div></div></div>';});
     h+='</div><div class="xs dim" style="margin-top:10px">คำเหล่านี้จะถูกนำกลับมาถามในรอบถัดไปอัตโนมัติ</div></div>';
   }else if(!Q.placement){
     h+='<div class="card" style="margin-top:12px"><b style="color:var(--ok)">ไม่พลาดเลยทั้งรอบ</b>'+
@@ -1617,7 +1545,6 @@ function finish(){
   var a=$("#app");a.innerHTML=h;a.className="fade";
   $("#fb").classList.remove("show");
   $("#nav").classList.remove("hide");
-  a.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
   $("#again").onclick=function(){
     if(Q.placement)start({lv:S.unlocked,ui:-1});
     else if(Q.opt&&Q.opt.daily)startGen(false);
@@ -1706,7 +1633,7 @@ function bubble(m){
   else if(m.th)h+='<div class="xs" style="color:var(--ok);margin-bottom:8px">✓ '+esc(m.th)+'</div>';
   h+='<div style="font-size:16px">'+esc(m.t)+'</div>';
   if(m.tth)h+='<div class="xs dim" style="margin-top:5px">'+esc(m.tth)+'</div>';
-  h+='<button class="pill" data-say="'+esc(m.t)+'" style="margin-top:9px">🔊 ฟัง</button></div></div>';
+  h+='</div></div>';
   return h;
 }
 function chatBind(){
@@ -1718,7 +1645,6 @@ function chatBind(){
   var s=$("#chSend"),i=$("#chIn");
   if(s){s.onclick=function(){chatTurn(i.value);};
     i.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();chatTurn(i.value);}};}
-  document.querySelectorAll("[data-say]").forEach(function(b){b.onclick=function(){speak(b.dataset.say);};});
 }
 function chatTurn(userText){
   if(CH.busy)return;
