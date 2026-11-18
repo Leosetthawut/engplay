@@ -107,7 +107,7 @@ export async function onRequestPost(context) {
   }
 
   // 5. ตั้งค่า Gemini
-  const model = env.GEMINI_MODEL || "gemini-2.5-flash-lite";
+  const model = env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 
   const maxOutput = Math.min(
     Math.max(Number(env.GEMINI_MAX_OUTPUT_TOKENS) || 1200, 200),
