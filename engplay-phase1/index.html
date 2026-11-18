@@ -153,7 +153,7 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 <script>
 /* =======================================================================
    EngPlay — เกมฝึกภาษาอังกฤษ 3 ระดับ
-   ออฟไลน์ล้วน · ไม่มีเซิร์ฟเวอร์ · เนื้อหา 150 คำ/สำนวน + ระบบทบทวนอัตโนมัติ
+   EngPlay · Supabase Cloud Save + OpenAI Tutor · เนื้อหา 150 คำ/สำนวน
    ======================================================================= */
 
 /* ---------------------------- 1. คลังเนื้อหา ---------------------------- */
@@ -373,8 +373,12 @@ function initCloud(){
   });
 }
 async function handleAuthSession(session){
+  var previousUserId=authUser&&authUser.id;
   authUser=session&&session.user?session.user:null;
-  if(!authUser){cloudStatus="ยังไม่ได้เข้าสู่ระบบ";if(document.getElementById("accountBox"))render();return;}
+  if(previousUserId!==(authUser&&authUser.id)){
+    CH.msgs=[];CH.topic="";CH.sessionId=null;CH.loaded=false;CH.busy=false;
+  }
+  if(!authUser){cloudStatus="ยังไม่ได้เข้าสู่ระบบ";if(view==="chat"||document.getElementById("accountBox"))render();return;}
   cloudStatus="กำลังโหลดข้อมูลจาก Cloud...";
   try{
     var result=await cloudClient.from("user_progress").select("payload,updated_at").eq("user_id",authUser.id).maybeSingle();
@@ -387,7 +391,7 @@ async function handleAuthSession(session){
       cloudStatus="กำลังย้ายข้อมูลเดิมขึ้น Cloud...";await pushCloud();
     }
   }catch(e){cloudHydrating=false;cloudStatus="ซิงก์ไม่สำเร็จ: "+(e.message||"ตรวจสอบการตั้งค่า");console.error("EngPlay cloud sync",e);}
-  if(document.getElementById("accountBox"))render();
+  if(view==="chat"||document.getElementById("accountBox"))render();
 }
 async function pushCloud(){
   if(!authUser||!cloudClient||cloudHydrating)return;
@@ -817,69 +821,61 @@ var ERRTH={article:"a / an / the",verbform:"รูปกริยา (ช่อ�
   aux:"กริยาช่วย (do/does/did/will)",prep:"บุพบท (in/on/at)",plural:"การเติม s",
   spelling:"การสะกดคำ",order:"ลำดับคำในประโยค",missing:"คำที่หายไป",extra:"คำที่เกินมา",word:"เลือกคำผิด"};
 
-/* ============ 3d. ผู้ช่วย AI — ต่อกับ Claude API ผ่านพร็อกซีของคุณเอง ============
-   โหมด proxy : หน้าเว็บยิงไปที่ URL ของคุณ แล้วเซิร์ฟเวอร์ถือ API key ไว้ (แนะนำ)
-   โหมด key   : หน้าเว็บยิงไป api.anthropic.com ตรง ๆ ด้วยคีย์ที่เก็บในเครื่องนี้
-                (ใช้กับเครื่องส่วนตัวเท่านั้น เพราะคีย์จะอยู่ในเบราว์เซอร์)            */
+/* ============ 3d. EngPlay AI — OpenAI ผ่าน Cloudflare Pages Functions ============
+   API Key อยู่ฝั่ง server เท่านั้น; Browser ส่ง Supabase access token ไปยืนยันตัวตน */
 var AIKEY="engplay_ai";
-var AICFG={mode:"none",url:"",pass:"",key:"",quick:"claude-haiku-5-5",deep:"claude-sonnet-5-5"};
-try{var _ac=localStorage.getItem(AIKEY);if(_ac){var _o=JSON.parse(_ac);for(var _k in _o)AICFG[_k]=_o[_k];}}catch(e){}
-function aiSave(){try{localStorage.setItem(AIKEY,JSON.stringify(AICFG));}catch(e){}}
+try{localStorage.removeItem(AIKEY);}catch(e){} /* ล้างคีย์/ค่าพร็อกซีเก่าจากรุ่นก่อน */
+var AICFG={mode:"proxy",url:"/api/ai"};
 var AI={st:"off",cool:0,last:""};
-function aiSync(){
-  AI.st=((AICFG.mode==="proxy"&&AICFG.url)||(AICFG.mode==="key"&&AICFG.key))?"on":"off";
-}
+function aiSync(){AI.st=cloudConfigured()?"on":"off";}
 aiSync();
-function aiReady(){return AI.st==="on"&&S.ai!==false&&Date.now()>AI.cool;}
+function aiReady(){return AI.st==="on"&&S.ai!==false&&!!authUser&&Date.now()>AI.cool;}
 
 function aiCall(prompt,tier,noGuard){
-  if(!noGuard&&!aiReady())return Promise.resolve(null);
-  var body={model:(tier==="default"?AICFG.deep:AICFG.quick),
-    max_tokens:(tier==="default"?800:400),
-    messages:[{role:"user",content:prompt}]};
-  var url,hd={"content-type":"application/json"};
-  if(AICFG.mode==="key"){
-    url="https://api.anthropic.com/v1/messages";
-    hd["x-api-key"]=AICFG.key;
-    hd["anthropic-version"]="2023-06-01";
-    hd["anthropic-dangerous-direct-browser-access"]="true";
-  }else{
-    url=AICFG.url;
-    if(AICFG.pass)hd["x-app-key"]=AICFG.pass;
+  if(!noGuard&&!aiReady()){
+    AI.last=!authUser?"กรุณาเข้าสู่ระบบก่อนใช้ AI":(S.ai===false?"AI ถูกปิดชั่วคราว":"AI ยังไม่พร้อมใช้งาน");
+    return Promise.resolve(null);
   }
-  return fetch(url,{method:"POST",headers:hd,body:JSON.stringify(body)}).then(function(r){
-    if(!r.ok){
-      if(r.status===401||r.status===403){AI.last="กุญแจหรือรหัสผ่านไม่ถูกต้อง ("+r.status+")";AI.cool=Date.now()+60000;}
-      else if(r.status===429){AI.last="ใช้งานถี่เกินไป ลองใหม่ในอีกสักครู่";AI.cool=Date.now()+90000;}
-      else {AI.last="เซิร์ฟเวอร์ตอบกลับรหัส "+r.status;AI.cool=Date.now()+20000;}
-      return null;
-    }
-    AI.last="";
-    return r.json();
-  }).then(function(j){
-    if(!j)return null;
-    if(typeof j.text==="string")return j.text;                              /* พร็อกซีแบบง่าย */
-    if(j.content&&j.content[0]&&j.content[0].text)return j.content[0].text; /* รูปแบบของ Claude API */
-    if(j.error){AI.last=String(j.error.message||j.error).slice(0,120);return null;}
+  if(!authUser){AI.last="กรุณาเข้าสู่ระบบก่อนทดสอบ AI";return Promise.resolve(null);}
+  return cloudClient.auth.getSession().then(function(sessionResult){
+    var session=sessionResult&&sessionResult.data&&sessionResult.data.session;
+    if(!session||!session.access_token){AI.last="Session หมดอายุ กรุณาเข้าสู่ระบบใหม่";return null;}
+    return fetch("/api/ai",{method:"POST",headers:{
+      "content-type":"application/json","authorization":"Bearer "+session.access_token
+    },body:JSON.stringify({prompt:String(prompt||""),tier:tier==="default"?"default":"quick"})});
+  }).then(function(r){
+    if(!r)return null;
+    return r.json().then(function(j){
+      if(!r.ok){
+        AI.last=(j&&j.error)?String(j.error):"AI API ตอบกลับรหัส "+r.status;
+        if(r.status===401||r.status===403)AI.cool=Date.now()+30000;
+        if(r.status===429)AI.cool=Date.now()+60000;
+        return null;
+      }
+      AI.last="";
+      return j&&typeof j.text==="string"?j.text:null;
+    });
+  }).catch(function(e){
+    AI.last="เชื่อมต่อ AI ไม่สำเร็จ: "+(e&&e.message?e.message:"ตรวจสอบอินเทอร์เน็ต");
     return null;
-  }).catch(function(){AI.last="ต่อเซิร์ฟเวอร์ไม่ได้ ตรวจ URL และอินเทอร์เน็ต";AI.cool=Date.now()+30000;return null;});
+  });
 }
 function aiJSON(prompt,tier){
   return aiCall(prompt,tier).then(function(t){
     if(!t)return null;
     var m=String(t).match(/\{[\s\S]*\}|\[[\s\S]*\]/);
-    try{return m?JSON.parse(m[0]):null;}catch(e){return null;}
+    try{return m?JSON.parse(m[0]):null;}catch(e){AI.last="AI ส่งข้อมูลไม่อยู่ในรูปแบบที่อ่านได้";return null;}
   });
 }
 function aiText(prompt,onText,tier){
   return aiCall(prompt,tier).then(function(t){if(t&&onText)onText({text:t});return t;});
 }
 function aiTest(el){
-  el.textContent="กำลังทดสอบการเชื่อมต่อ...";
+  el.textContent="กำลังทดสอบ OpenAI API...";
   var save=AI.cool;AI.cool=0;
-  return aiCall("ตอบกลับคำว่า OK เพียงคำเดียว",null,true).then(function(t){
+  return aiCall("ตอบกลับคำว่า OK เพียงคำเดียว", "quick", true).then(function(t){
     if(t){AI.last="";aiSync();el.innerHTML='<span style="color:var(--ok)">✓ เชื่อมต่อสำเร็จ — โมเดลตอบว่า: '+
-      esc(String(t).slice(0,40))+'</span><br>กดบันทึกเพื่อเริ่มใช้งาน';}
+      esc(String(t).slice(0,40))+'</span>';}
     else{AI.cool=save;el.innerHTML='<span style="color:var(--bad)">✕ ไม่สำเร็จ: '+esc(AI.last||"ไม่ทราบสาเหตุ")+'</span>';}
   });
 }
@@ -962,11 +958,10 @@ function homeHTML(){
 
   if(AI.st==="on"&&S.ai!==false){
     h+='<div class="card" style="margin-bottom:14px;border-color:var(--brand2)">'+
-      '<div class="row"><div style="flex:1"><b>🤖 ผู้ช่วย AI เปิดอยู่</b>'+
+      '<div class="row"><div style="flex:1"><b>🤖 OpenAI English Tutor</b>'+
       '<div class="sm dim" style="margin-top:3px">'+
-      (AICFG.mode==="proxy"?"ผ่านเซิร์ฟเวอร์ของคุณเอง":"ยิงตรงด้วย API key ในเครื่องนี้")+
-      ' · ช่วยตรวจประโยคที่เขียนเอง อธิบายเพิ่มเป็นภาษาไทย คุยโต้ตอบ และสร้างบทเรียนใหม่</div></div>'+
-      '<button class="pill" id="aiCfgBtn">ตั้งค่า</button></div>'+
+      (authUser?"เชื่อมต่อผ่าน Cloudflare Backend · API Key ปลอดภัยฝั่ง Server":"เข้าสู่ระบบเพื่อเริ่มใช้ AI Tutor")+
+      '</div></div><button class="pill" id="aiCfgBtn">รายละเอียด</button></div>'+
       '<div class="grid2" style="margin-top:12px">'+
       '<button class="btn sm2" id="goChat">คุยกับโค้ช</button>'+
       '<button class="btn ghost sm2" id="aiToggle">ปิดชั่วคราว</button></div>'+
@@ -982,52 +977,17 @@ function homeHTML(){
       '<div id="lsMsg" class="xs dim" style="margin-top:8px"></div></div></div>';
   }else{
     h+='<div class="card" style="margin-bottom:14px">'+
-      '<div class="row"><div style="flex:1"><b>เปิดใช้ผู้ช่วย AI (ไม่บังคับ)</b>'+
-      '<div class="sm dim" style="margin-top:3px">ตรวจประโยคที่เขียนเองแบบเข้าใจความหมาย อธิบายเป็นไทย '+
-      'โค้ชสนทนา และสร้างบทเรียนใหม่ · ทุกโหมดอื่นเล่นได้ครบโดยไม่ต้องเปิด</div></div></div>'+
+      '<div class="row"><div style="flex:1"><b>OpenAI English Tutor</b>'+
+      '<div class="sm dim" style="margin-top:3px">AI Conversation, Sentence Checker และบทเรียนที่สร้างตามหัวข้อ</div></div></div>'+
       (AI.last?'<div class="xs" style="color:var(--warn);margin-top:8px">'+esc(AI.last)+'</div>':'')+
-      '<button class="btn sm2" id="aiCfgBtn" style="margin-top:12px">ตั้งค่าการเชื่อมต่อ</button></div>';
+      '<button class="btn sm2" id="aiCfgBtn" style="margin-top:12px">ตรวจสอบการตั้งค่า AI</button></div>';
   }
-
   if(CFGOPEN){
-    var pr=AICFG.mode!=="key";
-    h+='<div class="card" style="margin-bottom:14px;border-color:var(--brand)"><b>ตั้งค่าการเชื่อมต่อ AI</b>'+
-      '<div class="sm dim" style="margin:6px 0 12px">เลือกวิธีที่หน้าเว็บนี้จะคุยกับโมเดล</div>'+
-      '<select id="cfgMode" style="width:100%;background:var(--card2);border:1px solid var(--line);'+
-      'border-radius:12px;padding:13px;color:var(--txt);font-size:15px;outline:none">'+
-      '<option value="proxy"'+(AICFG.mode==="proxy"?" selected":"")+'>ผ่านเซิร์ฟเวอร์ของฉัน (แนะนำ)</option>'+
-      '<option value="key"'+(AICFG.mode==="key"?" selected":"")+'>ใส่ API key ตรง ๆ (เครื่องส่วนตัวเท่านั้น)</option>'+
-      '<option value="none"'+(AICFG.mode==="none"?" selected":"")+'>ไม่ใช้ AI</option></select>';
-    if(pr){
-      h+='<div class="xs dim" style="margin:12px 0 5px">URL ของพร็อกซี เช่น https://engplay-ai.ชื่อคุณ.workers.dev</div>'+
-        '<input id="cfgUrl" type="url" placeholder="https://..." value="'+esc(AICFG.url)+'" '+
-        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
-        'color:var(--txt);font-size:15px;outline:none">'+
-        '<div class="xs dim" style="margin:10px 0 5px">รหัสผ่านของพร็อกซี (ถ้าตั้งไว้)</div>'+
-        '<input id="cfgPass" type="password" placeholder="เว้นว่างได้" value="'+esc(AICFG.pass)+'" '+
-        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
-        'color:var(--txt);font-size:15px;outline:none">';
-    }else{
-      h+='<div class="xs dim" style="margin:12px 0 5px">Anthropic API key (sk-ant-...)</div>'+
-        '<input id="cfgKey" type="password" placeholder="sk-ant-..." value="'+esc(AICFG.key)+'" '+
-        'style="width:100%;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:12px;'+
-        'color:var(--txt);font-size:15px;outline:none">'+
-        '<div class="xs" style="margin-top:8px;color:var(--warn)">⚠ คีย์จะถูกเก็บในเบราว์เซอร์เครื่องนี้และแนบไปกับทุกคำขอ '+
-        'ห้ามใช้โหมดนี้กับเว็บที่แชร์ให้คนอื่น ให้ใช้พร็อกซีแทน</div>';
-    }
-    h+='<div class="grid2" style="margin-top:10px">'+
-      '<div><div class="xs dim" style="margin-bottom:5px">โมเดลสำหรับงานเร็ว</div>'+
-      '<input id="cfgQuick" value="'+esc(AICFG.quick)+'" style="width:100%;background:var(--card2);'+
-      'border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--txt);font-size:13px;outline:none"></div>'+
-      '<div><div class="xs dim" style="margin-bottom:5px">โมเดลสำหรับงานยาว</div>'+
-      '<input id="cfgDeep" value="'+esc(AICFG.deep)+'" style="width:100%;background:var(--card2);'+
-      'border:1px solid var(--line);border-radius:12px;padding:10px;color:var(--txt);font-size:13px;outline:none"></div></div>'+
-      '<div class="grid2" style="margin-top:12px">'+
-      '<button class="btn sm2" id="cfgSave">บันทึก</button>'+
-      '<button class="btn ghost sm2" id="cfgTest">ทดสอบการเชื่อมต่อ</button></div>'+
-      '<div id="cfgMsg" class="xs dim" style="margin-top:10px"></div>'+
-      '<div class="xs dim" style="margin-top:10px">วิธีตั้งพร็อกซีอยู่ในไฟล์ README.md ที่มากับแอป '+
-      '(วางบน Cloudflare Workers ฟรีได้ใน 5 นาที)</div></div>';
+    h+='<div class="card" style="margin-bottom:14px;border-color:var(--brand)"><b>การเชื่อมต่อ OpenAI</b>'+
+      '<div class="sm dim" style="margin:8px 0">EngPlay ใช้ Cloudflare Pages Functions เป็น Backend และเก็บ OPENAI_API_KEY เป็น Secret บน Cloudflare</div>'+
+      '<div class="xs dim">ไม่ต้องกรอก API Key ในหน้านี้ และไม่ควรใส่ API Key ลงใน index.html หรือ GitHub</div>'+
+      '<button class="btn sm2" id="cfgTest" style="margin-top:12px">ทดสอบการเชื่อมต่อ</button>'+
+      '<div id="cfgMsg" class="xs dim" style="margin-top:10px"></div></div>';
   }
 
   var nCust=(S.cust||[]).length;
@@ -1184,25 +1144,10 @@ function bind(){
   var gc=$("#goChat");if(gc)gc.onclick=function(){go("chat");};
   var at=$("#aiToggle");if(at)at.onclick=function(){S.ai=(S.ai===false);save();
     toast(S.ai?"เปิดผู้ช่วย AI แล้ว":"ปิดผู้ช่วย AI ชั่วคราวแล้ว");render();};
-  var cb=$("#aiCfgBtn");if(cb)cb.onclick=function(){
-    CFGOPEN=!CFGOPEN;if(CFGOPEN&&AICFG.mode==="none")AICFG.mode="proxy";render();};
-  var cm=$("#cfgMode");if(cm)cm.onchange=function(){AICFG.mode=cm.value;render();};
-  var cs=$("#cfgSave");if(cs)cs.onclick=function(){
-    var u=$("#cfgUrl"),p=$("#cfgPass"),k=$("#cfgKey"),q=$("#cfgQuick"),d=$("#cfgDeep");
-    if(u)AICFG.url=u.value.trim();
-    if(p)AICFG.pass=p.value.trim();
-    if(k)AICFG.key=k.value.trim();
-    if(q&&q.value.trim())AICFG.quick=q.value.trim();
-    if(d&&d.value.trim())AICFG.deep=d.value.trim();
-    AI.cool=0;AI.last="";aiSave();aiSync();S.ai=true;save();
-    toast(AI.st==="on"?"บันทึกแล้ว · AI พร้อมใช้งาน":"บันทึกแล้ว");
-    CFGOPEN=(AI.st!=="on");render();};
-  var ct=$("#cfgTest");if(ct)ct.onclick=function(){
-    var u=$("#cfgUrl"),p=$("#cfgPass"),k=$("#cfgKey");
-    if(u)AICFG.url=u.value.trim();
-    if(p)AICFG.pass=p.value.trim();
-    if(k)AICFG.key=k.value.trim();
-    aiSave();aiTest($("#cfgMsg"));};
+  var cb=$("#aiCfgBtn");if(cb)cb.onclick=function(){CFGOPEN=!CFGOPEN;render();};
+  var cs=$("#cfgTest");if(cs)cs.onclick=function(){
+    if(!authUser){$("#cfgMsg").textContent="กรุณาเข้าสู่ระบบก่อนทดสอบ";return;}
+    aiTest($("#cfgMsg"));};
   var lg=$("#lsGo");
   if(lg)lg.onclick=function(){
     if(lg.disabled)return;lg.disabled=true;lg.style.opacity=.5;
@@ -1640,11 +1585,51 @@ function finish(){
 }
 
 /* ===================== 7. โหมดคุยกับโค้ช AI ===================== */
-var CH={msgs:[],topic:"",busy:false};
+var CH={msgs:[],topic:"",busy:false,sessionId:null,loaded:false};
+function newChatSessionId(){
+  return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():
+    ("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){
+      var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16);
+    }));
+}
+async function loadChatHistory(){
+  if(CH.loaded||!authUser||!cloudClient)return;
+  CH.loaded=true;
+  try{
+    var latest=await cloudClient.from("ai_chat_messages").select("session_id")
+      .eq("user_id",authUser.id).order("created_at",{ascending:false}).limit(1).maybeSingle();
+    if(latest.error)throw latest.error;
+    if(!latest.data)return;
+    CH.sessionId=latest.data.session_id;
+    var rows=await cloudClient.from("ai_chat_messages")
+      .select("role,content,metadata,created_at").eq("user_id",authUser.id)
+      .eq("session_id",CH.sessionId).order("created_at",{ascending:true}).limit(60);
+    if(rows.error)throw rows.error;
+    CH.msgs=(rows.data||[]).map(function(m){
+      var meta=m.metadata||{};
+      if(m.role==="user")return{r:"u",t:m.content};
+      return{r:"c",t:m.content,tth:meta.tth||"",fix:meta.fix||"",th:meta.th||""};
+    });
+    var last=(rows.data||[]).slice(-1)[0];
+    if(last&&last.metadata&&last.metadata.topic)CH.topic=last.metadata.topic;
+  }catch(e){console.error("EngPlay chat history",e);}
+  if(view==="chat")render();
+}
+async function saveChatMessage(role,content,metadata){
+  if(!authUser||!cloudClient||!CH.sessionId)return;
+  var res=await cloudClient.from("ai_chat_messages").insert({
+    user_id:authUser.id,session_id:CH.sessionId,role:role,content:content,
+    metadata:metadata||{}
+  });
+  if(res.error)console.error("EngPlay save chat",res.error);
+}
 var TOPICS=[["ที่ร้านอาหาร","ordering food at a restaurant"],["สัมภาษณ์งาน","a job interview"],
   ["เดินทาง / สนามบิน","travelling and the airport"],["คุยเล่นกับเพื่อนต่างชาติ","small talk with a foreign friend"],
   ["ประชุมงาน","a work meeting"],["ไปหาหมอ","visiting a doctor"]];
 function chatHTML(){
+  if(!authUser)return '<div class="card" style="margin-top:12px"><b>เข้าสู่ระบบเพื่อใช้ AI Tutor</b>'+
+    '<div class="sm dim" style="margin:8px 0 12px">บัญชี EngPlay ใช้ยืนยันตัวตนและบันทึกประวัติการสนทนาของคุณ</div>'+
+    '<button class="btn" id="chatLogin">เข้าสู่ระบบ / สมัครสมาชิก</button></div>';
   var h='<div class="row" style="margin:6px 2px 12px"><div style="flex:1">'+
     '<h1 style="font-size:19px">โค้ชสนทนา AI</h1>'+
     '<div class="sm dim">อ่านคำถาม แล้วพิมพ์ตอบเป็นภาษาอังกฤษ โค้ชจะแก้ให้ทุกครั้ง</div></div>'+
@@ -1653,7 +1638,7 @@ function chatHTML(){
     h+='<div class="card"><b>เลือกหัวข้อที่อยากฝึก</b><div class="pool" style="margin-top:12px">'+
       TOPICS.map(function(t,i){return '<button class="chip" data-tp="'+i+'" style="padding:12px 14px">'+esc(t[0])+'</button>';}).join("")+
       '</div><div class="xs dim" style="margin-top:12px">ตอบผิดไม่เป็นไร โค้ชจะบอกประโยคที่ถูกให้ทุกข้อ '+
-      'บทสนทนาจะยังไม่ถูกซิงก์ใน Phase 1</div></div>';
+      'บทสนทนาจะถูกบันทึกในบัญชี EngPlay ของคุณ</div></div>';
     return h;
   }
   h+='<div id="chList">'+CH.msgs.map(function(m){return bubble(m);}).join("")+'</div>';
@@ -1680,9 +1665,11 @@ function bubble(m){
   return h;
 }
 function chatBind(){
+  var login=$("#chatLogin");if(login)login.onclick=function(){showAuthModal("login");};
+  if(authUser&&!CH.loaded)loadChatHistory();
   document.querySelectorAll("[data-tp]").forEach(function(b){
-    b.onclick=function(){CH.topic=TOPICS[+b.dataset.tp][1];CH.msgs=[];render();chatTurn(null);};});
-  var r=$("#chReset");if(r)r.onclick=function(){CH.topic="";CH.msgs=[];render();};
+    b.onclick=function(){CH.topic=TOPICS[+b.dataset.tp][1];CH.msgs=[];CH.sessionId=newChatSessionId();render();chatTurn(null);};});
+  var r=$("#chReset");if(r)r.onclick=function(){CH.topic="";CH.msgs=[];CH.sessionId=null;render();};
   var s=$("#chSend"),i=$("#chIn");
   if(s){s.onclick=function(){chatTurn(i.value);};
     i.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();chatTurn(i.value);}};}
@@ -1692,7 +1679,11 @@ function chatTurn(userText){
   if(CH.busy)return;
   if(userText!==null&&!String(userText).trim())return;
   var lvName=["ง่ายมาก (ประโยคสั้น)","ระดับกลาง","ระดับสูง ใช้สำนวนได้"][unlockedLv()-1];
-  if(userText!==null){CH.msgs.push({r:"u",t:userText.trim()});S.ans++;S.n++;}
+  if(!CH.sessionId)CH.sessionId=newChatSessionId();
+  if(userText!==null){
+    CH.msgs.push({r:"u",t:userText.trim()});S.ans++;S.n++;
+    saveChatMessage("user",userText.trim(),{topic:CH.topic});
+  }
   CH.busy=true;render();
   var list=$("#chList");
   if(list)list.insertAdjacentHTML("beforeend",'<div class="xs dim" id="chWait" style="margin:8px 0">โค้ชกำลังพิมพ์...</div>');
@@ -1717,9 +1708,12 @@ function chatTurn(userText){
       var cs=S.modes.chat||(S.modes.chat={c:0,t:0});cs.t++;if(good)cs.c++;
       touchDay();
     }
-    CH.msgs.push({r:"c",t:r.reply,tth:r.tth,
+    var assistantMsg={r:"c",t:r.reply,tth:r.tth,
       fix:(userText!==null&&r.fix&&norm(r.fix)!==norm(userText))?r.fix:"",
-      th:(userText!==null?r.th:"")});
+      th:(userText!==null?r.th:"")};
+    CH.msgs.push(assistantMsg);
+    saveChatMessage("assistant",r.reply,{topic:CH.topic,tth:assistantMsg.tth,
+      fix:assistantMsg.fix,th:assistantMsg.th});
     save();render();
     setTimeout(function(){window.scrollTo(0,document.body.scrollHeight);
       var i=$("#chIn");if(i)try{i.focus();}catch(e){}},80);
